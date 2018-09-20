@@ -15,17 +15,13 @@ class CountDataset(Dataset):
         
         file = kwargs.get('file')
         
-        self.isnms = kwargs.get('isnms')
-        self.trainembd = kwargs.get('trainembd')
-        
         #6 postion encoded vectors as used by irls
         self.spatial = True
         
         with open(file,'rb') as f:
             self.data = pickle.load(f)
                                  
-        if self.trainembd:    
-            self.dictionary = Dictionary.load_from_file(kwargs.get('dictionaryfile'))
+        self.dictionary = Dictionary.load_from_file(kwargs.get('dictionaryfile'))
         
         if kwargs.get('testrun'):
             self.data = self.data[:32]
@@ -90,16 +86,7 @@ class CountDataset(Dataset):
         box_locations = self.features_file['boxes'][index]
         # find the boxes with all co-ordinates 0,0,0,0
         #L = np.where(~box_locations.any(axis=1))[0][0]
-        
-        if self.isnms:
-            keep  =  non_max_suppression_fast(box_locations.T,0.7)
-            L = len(keep)
-            box_f = box_feats.T[keep]
-            box_f = np.concatenate([box_f,np.zeros((100-L,2048))])
-            box_l = box_locations.T[keep]
-            box_l = np.concatenate([box_l,np.zeros((100-L,4))])
-            return L,W,H,box_f,box_l  
-        
+               
         if self.spatial:
             spatials = self._process_boxes(box_locations.T,W,H)
             return L,W,H,box_feats.T,spatials
@@ -124,14 +111,6 @@ class CountDataset(Dataset):
         # find the boxes with all co-ordinates 0,0,0,0
         #L = np.where(~box_locations.any(axis=1))[0][0]
         
-        if self.isnms:
-            keep  =  non_max_suppression_fast(box_locations.T,0.7)
-            L = len(keep)
-            box_f = box_feats.T[keep]
-            box_f = np.concatenate([box_f,np.zeros((100-L,2048))])
-            box_l = box_locations.T[keep]
-            box_l = np.concatenate([box_l,np.zeros((100-L,4))])
-            return L,W,H,box_f,box_l  
         if self.spatial:
             spatials = self._process_boxes(box_locations.T,W,H)
             return L,W,H,box_feats.T,spatials
@@ -185,29 +164,14 @@ class CountDataset(Dataset):
         if ans is None:
             ans = ent['answer']
         que = ent['question']
-       
-        lasttwo = '/'.join(img_name.split("/")[-2:])
-        lasttwo +=".pkl"
-        lastone = lasttwo.split("/")[-1]
-        wholefeat,pooled = self._load_pool_image(lasttwo[:-4])
-
         #wholefeat = pooled = 0
-        
-#        pk = pickle.load(open(os.path.join("/home/manoj/448feats/feats",lastone),"rb"))
-#        L =  len(pk) - 1 # lenght of entries in pickle file
-
         if 'VG' in img_name:
             L, W, H ,imgarr,box_coords = self._load_image_genome(img_id)
         else:
             L, W, H ,imgarr,box_coords = self._load_image_coco(img_id)
-        
 
-        if self.trainembd:
-            tokens = tokenize_ques(self.dictionary,que)
-            qfeat = torch.from_numpy(tokens).long()
-        else:
-            qfeat = getglove(que)
-            qfeat = torch.from_numpy(qfeat)
+        tokens = tokenize_ques(self.dictionary,que)
+        qfeat = torch.from_numpy(tokens).long()
 
         imgarr = torch.from_numpy(imgarr)
         box_coords = torch.from_numpy(box_coords)

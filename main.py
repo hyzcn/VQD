@@ -26,8 +26,6 @@ def parse_args():
     parser.add_argument('--resume', type=str, default=None, help='resume file name')
     parser.add_argument('--test', type=bool, default=False, help='test only')
     parser.add_argument('--testrun', action='store_true', help='test run with few dataset')
-    parser.add_argument('--isnms', type=bool, default=False, help='Do nms?')
-    parser.add_argument('--trainembd',type=bool,default=True,help='use fixed / trainable embedding')
     parser.add_argument('--nobaselines', action='store_true',help='does not eval baselines')
     parser.add_argument('--savejson',type=bool,default=True,help='save json in VQA format')
     parser.add_argument('--clip_norm', type=float, default=200.0, help='norm clipping')

@@ -96,8 +96,8 @@ def coco_image_filename(image_id):
     return image_list
 
 def load_image(image_list):
-    filename_1 = "dataset/train2014/" + image_list[0]
-    filename_2 = "dataset/val2014/" + image_list[1]
+    filename_1 = "../dataset/train2014/" + image_list[0]
+    filename_2 = "../dataset/val2014/" + image_list[1]
     image_tensor = None
 
     try:
@@ -184,9 +184,9 @@ def get_image_id(ann_dict):
 
 
 def vqd_n_panoptic():
-    p_filename_t = 'dataset/panoptic_train2017.json'
-    # p_filename_v = 'dataset/panoptic_val2017.json'
-    v_filename = 'dataset/vqd_correction.json'
+    p_filename_t = '../dataset/panoptic_train2017.json'
+    # p_filename_v = '../dataset/panoptic_val2017.json'
+    v_filename = '../dataset/vqd_correction.json'
 
     p_f_t = json.load(open(p_filename_t))
     # p_f_v = json.load(open(p_filename_v))
@@ -267,5 +267,5 @@ if __name__ == '__main__':
     vqd_n_panoptic()
     # print(len(get_category_id_to_label()))
     # print(get_coco_img_id_to_vqd_id())
-    # filename = 'dataset/vqd_correction.json'
+    # filename = '../dataset/vqd_correction.json'
     # bounding_box_distribution(filename)

@@ -8,7 +8,7 @@ import matplotlib.patches as patches
 def save_large_num_bbox(file_path):
 
     ds = json.load(open(file_path))
-    bbox_file = 'dataset/plot_bbox.json'
+    bbox_file = '../dataset/plot_bbox.json'
     ann = ds['annotations']
     idx = 0
 
@@ -99,8 +99,8 @@ def images_with_bboxes(file_path):
 
 
 def save_original_bbox_file():
-    orig_file = 'dataset/vqd_final.json'
-    bbox_file = 'dataset/plot_bbox.json'
+    orig_file = '../dataset/vqd_final.json'
+    bbox_file = '../dataset/plot_bbox.json'
 
     of = json.load(open(orig_file))
     bb = json.load(open(bbox_file))
@@ -113,9 +113,9 @@ def save_original_bbox_file():
 
 
 if __name__ == '__main__':
-    file_path = 'dataset/vqd_correction.json'
+    file_path = '../dataset/vqd_correction.json'
     # bbox_file = save_large_num_bbox(file_path)
-    # bbox_file = 'dataset/plot_bbox.json'
+    # bbox_file = '../dataset/plot_bbox.json'
     # plot_img_bbox(bbox_file)
     # save_original_bbox_file()
     images_with_bboxes(file_path)

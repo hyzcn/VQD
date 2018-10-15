@@ -1,7 +1,7 @@
 # Visual_Query_detection Dataset
 
 ```shell
-File: data/vqd_correction_0_10_bbox.json
+File: ../dataset/vqd_correction_0_10_bbox.json
 
 Train images:  67464
 Val images:  22489

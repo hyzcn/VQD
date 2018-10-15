@@ -40,8 +40,8 @@ def vqd_correction_spelling(input_file, output_file):
                 sentence = " ".join(words)
                 qs[item][id] = sentence
 
-    # with open(output_file, 'w') as fp:
-    #     json.dump(qs, fp)
+    with open(output_file, 'w') as fp:
+        json.dump(qs, fp)
     print("DONE")
 
 
@@ -76,5 +76,5 @@ if __name__ == '__main__':
     vqd_correction_spelling(input_file='../dataset/vqd_final.json',
                             output_file='../dataset/vqd_correction.json')
 
-    # vqd_correction_0_10_bbox(input_file='dataset/vqd_correction.json',
-    #                          output_file='dataset/vqd_correction_0_10_bbox.json')
+    vqd_correction_0_10_bbox(input_file='../dataset/vqd_correction.json',
+                             output_file='../dataset/vqd_correction_0_10_bbox.json')

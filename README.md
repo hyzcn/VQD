@@ -1,1 +1,1 @@
-# pointvqa
+# visual query detection 

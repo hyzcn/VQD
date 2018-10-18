@@ -13,6 +13,15 @@ import eval_extra
 from CLR import CyclicLR
 from utils import adjust_learning_rate
 #%%
+
+
+def instance_bce_with_logits(logits, labels):
+    assert logits.dim() == 2
+    loss = nn.functional.binary_cross_entropy_with_logits(logits, labels)
+    loss *= labels.size(1)
+    return loss
+
+
 def main(**kwargs):
     
     device = kwargs.get('device') 
@@ -38,11 +47,14 @@ def main(**kwargs):
         net.eval()
 
     reglossfn = nn.SmoothL1Loss() # also known as huber loss
-    clslossfn = nn.CrossEntropyLoss()
+    #reglossfn = nn.MSELoss()
+    #reglossfn = nn.L1Loss()
+    #clslossfn = nn.CrossEntropyLoss()
+    clslossfn = instance_bce_with_logits
     
     with torch.set_grad_enabled(istrain):
         for i, data in enumerate(loader):
-            qid,wholefeat,pooled,boxes,labels,ques,box_coords,index = data            
+            qid,wholefeat,pooled,boxes,labels,targets,ques,box_coords,index = data            
             idxs.extend(qid.tolist())        
             labels = labels.long()            
             index  = index.long()
@@ -57,9 +69,9 @@ def main(**kwargs):
                 pooled = pooled.permute(0,2,1)
                 pooled = F.normalize(pooled,p=2,dim=-1)
                 #print (pooled.shape)
-                wholefeat = F.normalize(wholefeat,p=2,dim=-1)
-                wholefeat = wholefeat.to(device)
+    
                 pooled = pooled.to(device)
+                wholefeat = F.normalize(wholefeat,p=2,dim=-1)
             else:
                 pooled = wholefeat = None
    
@@ -70,8 +82,8 @@ def main(**kwargs):
             box_feats = boxes.to(device)
             box_coords = box_coords.to(device)
             labels = labels.to(device)
+            targets = targets.to(device)
             q_feats = ques.to(device)
-            
      
             optimizer.zero_grad()
             
@@ -82,22 +94,20 @@ def main(**kwargs):
                            'box_coords':box_coords,
                            'index':index}
 
-            outc,outr = net(**net_kwargs)
+            out = net(**net_kwargs)
                           
-           if outr.ndimension() == 1:  # if regression
-               lossr = reglossfn(outr,labels.float())
-               #round the output
-               regpred = torch.round(outr.data.cpu()).numpy().ravel()
-               pred_reg.extend(regpred)
+            if out.ndimension() == 1:  # if regression
+                loss = reglossfn(out,labels.float())
+                #round the output
+                regpred = torch.round(out.data.cpu()).numpy().ravel()
+                pred_reg.extend(regpred)
     
     
-            if outc.ndimension() > 1: # if classification
-                lossc = clslossfn(outc, labels.long())
-                _,clspred = torch.max(outc,-1)
-                pred_cls.extend(clspred.data.cpu().numpy().ravel())
-        
-       
-            loss = lossr  +  lossc
+            else: # if classification
+                #loss = clslossfn(out, labels.long())
+                loss = clslossfn(out, targets)
+                _,clspred = torch.max(out,-1)
+                pred_reg.extend(clspred.data.cpu().numpy().ravel())
         
             loss_meter.update(loss.item())   
             if istrain:
@@ -122,10 +132,13 @@ def main(**kwargs):
         print("Completed in: {:2.2f} s".format(time.time() - start_time))
         ent = {}
         ent['true'] = true
-        ent['pred'] = pred_reg
+        ent['pred_reg'] = pred_reg
+        ent['pred_cls'] = pred_reg
         ent['loss'] = loss_meter.avg
         ent['qids'] = idxs
         return ent
+
+
 
 def run(**kwargs):
 
@@ -140,10 +153,14 @@ def run(**kwargs):
     #DETECT, MUTAN , Zhang , UPdown baselines
 
     if start_epoch == 0 and eval_baselines: # if not resuming
-        eval_extra.main(**kwargs) 
+        pass
+        #eval_extra.main(**kwargs)
         
     testset = test_loader.dataset.data
-    early_stop = EarlyStopping(monitor='loss',patience=10)
+    early_stop = EarlyStopping(monitor='loss',patience=8)
+    
+    clr = CyclicLR(base_lr=0.001, max_lr=0.006,
+                        step_size=1000., mode='triangular2')
     
     Modelsavefreq = 1
 
@@ -197,7 +214,8 @@ def run(**kwargs):
                 'epoch': epoch,
                 'state_dict': kwargs.get('model').state_dict(),
                 'true':test['true'],
-                'pred':test['pred'],
+                'pred_reg':test['pred_reg'],
+                'pred_cls':test['pred_cls'],
                 'qids': test['qids'],
                 'optimizer' : kwargs.get('optimizer').state_dict(),
             }
@@ -205,7 +223,12 @@ def run(**kwargs):
             save_checkpoint(savefolder,tbs,is_best)
 
         logger.dump_info()
-                
+        
+#        clr.clr_iterations = (epoch+1)* 1000
+#        adjust_learning_rate(kwargs.get('optimizer'), clr.nextlr())
+#        lr =  kwargs.get('optimizer').param_groups[0]['lr']
+#        logger.write("New Learning rate: {} ".format(lr))
+        
         early_stop.on_epoch_end(epoch,logs=test)
         if early_stop.stop_training:
             lr =  kwargs.get('optimizer').param_groups[0]['lr']

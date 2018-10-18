@@ -116,6 +116,12 @@ metrics = {
 }
 
 
+def clip_gradient(optimizer, grad_clip):
+    for group in optimizer.param_groups:
+        for param in group['params']:
+            param.grad.data.clamp_(-grad_clip, grad_clip)
+
+
 def adjust_learning_rate(optimizer, newLR):
     """Sets the learning rate to newLR"""
     for param_group in optimizer.param_groups:
@@ -237,3 +243,17 @@ class Logger(object):
         self.log_file.write(msg + '\n')
         self.log_file.flush()
         print (msg)
+        
+              
+ # box functions
+def xywh_to_xyxy(boxes):
+  """Convert [x y w h] box format to [x1 y1 x2 y2] format."""
+  return np.hstack((boxes[:, 0:2], boxes[:, 0:2] + boxes[:, 2:4] - 1))
+
+def xyxy_to_xywh(boxes):
+  """Convert [x1 y1 x2 y2] box format to [x y w h] format."""
+  return np.hstack((boxes[:, 0:2], boxes[:, 2:4] - boxes[:, 0:2] + 1))       
+
+
+
+

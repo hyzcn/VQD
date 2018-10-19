@@ -9,7 +9,7 @@ def parse_args():
     # Optimization: General
     parser.add_argument('--batch_size', type=int, default=15, help='batch size in number of images per batch')
     parser.add_argument('--epochs', type=int,help='Number of epochs',default=50)
-    parser.add_argument('--model', help='Model Q | I| QI | Main | RN',default='RN_OG_embd')
+    parser.add_argument('--model', help='Model Q | I| QI | Main | RN',default='RN_GTU')
     parser.add_argument('--lr', type=float,default=0.0003,help='Learning rate')
     parser.add_argument('--save', help='save folder name',default='0')
     parser.add_argument('--seed', type=int, default=1111, help='random seed')

@@ -17,15 +17,25 @@ global_config['glove'] = 'embedding/{}/glove6b_init_300d.npy'
 #dataset configs
 name= 'refcoco'
 dataset[name] = {}
+dataset[name]['dataset'] = name
 dataset[name]['splitBy'] = 'unc'
 dataset[name]['splits'] = ['val','testA','testB']
 
 name= 'refcoco+'
 dataset[name] = {}
+dataset[name]['dataset'] = name
 dataset[name]['splitBy'] = 'unc'
 dataset[name]['splits'] = ['val','testA','testB']
 
 name= 'refcocog'
 dataset[name] = {}
+dataset[name]['dataset'] = name
 dataset[name]['splitBy'] = 'umd'
 dataset[name]['splits'] = ['val','test']
+
+
+from models import Point
+#model names
+models = { 
+          'RN_GTU': Point.RN,
+          } 

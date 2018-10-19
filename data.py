@@ -4,56 +4,48 @@ import torch
 import h5py
 from models.dictionary import Dictionary
 from models.language import tokenize_ques
-from refer import REFER
 import os.path as osp
 import json
 import copy
+
+#"""
+#{'ann_id': 1706357,
+# 'category_id': 1,
+# 'file_name': 'COCO_train2014_000000421086_4.jpg',
+# 'image_id': 421086,
+# 'ref_id': 14024,
+# 'sent_ids': [39906, 39907, 39908],
+# 'sentences': [{'raw': 'left white shirt',
+#   'sent': 'left white shirt',
+#   'sent_id': 39906,
+#   'tokens': ['left', 'white', 'shirt']},
+#  {'raw': 'white shirt',
+#   'sent': 'white shirt',
+#   'sent_id': 39907,
+#   'tokens': ['white', 'shirt']},
+#  {'raw': 'top left corner: apron strings',
+#   'sent': 'top left corner apron strings',
+#   'sent_id': 39908,
+#   'tokens': ['top', 'left', 'corner', 'apron', 'strings']}],
+# 'split': 'testA'} """
 
 
 class ReferDataset(Dataset):
 
     def __init__(self,**kwargs):
     
-        data_root = kwargs.get('data_root')
         dataset = kwargs.get('dataset')
         splitBy = kwargs.get('splitBy')
-        splits = kwargs.get('splits')
-        refer = REFER(data_root, dataset, splitBy)
-               
-        # print stats about the given dataset
-        print ('dataset [%s_%s] contains: ' % (dataset, splitBy))
-        ref_ids = refer.getRefIds()
-        image_ids = refer.getImgIds()
-        print ('%s expressions for %s refs in %s images.' % (len(refer.Sents), len(ref_ids), len(image_ids)))
-        
-        split_ref_ids = {}
-        for split in splits:
-            ref_ids = refer.getRefIds(split=split)
-            split_ref_ids[split] = ref_ids
-            print ('%s refs are in split [%s].' % (len(ref_ids), split))
-            
-            
-        #have to sample various sentences and their tokens from here.
-        refs  = split_ref_ids['val']
-        self.data = []
-        for ref_id in refs:
-            ref = refer.Refs[ref_id]
-            image_id = ref['image_id']
-            sentences = ref.pop('sentences')
-            ref.pop('sent_ids')
-            entnew = copy.deepcopy(ref)
-            anns = refer.imgToAnns[image_id]
-            entnew['boxes'] = []
-            for box_ann in anns:
-                entnew['boxes'].append(box_ann['bbox'])
-            for sentence in sentences:
-                entnew['sentence'] = sentence
-                #entnew['bbox'] = anns['bbox']
-                entnew['gtbox'] = refer.refToAnn[ref_id]['bbox']
-                self.data.append(entnew)
-                
+        split = kwargs.get('split')
 
-        dictfile = kwargs.get('dictionaryfile').format(dataset)
+                   
+        data_json = osp.join('cache/prepro', dataset +"_"+ splitBy , split +'.json')
+        
+        with open(data_json,'r') as f:
+            self.data = json.load(f)
+
+
+        dictfile = kwargs.get('dictionaryfile')
         self.dictionary = Dictionary.load_from_file(dictfile)    
         if kwargs.get('testrun'):
             self.data = self.data[:20]
@@ -128,39 +120,32 @@ class ReferDataset(Dataset):
         sent_id = ent['sentence']['sent_id']
         file_name = ent['file_name']
         img_id = ent['image_id']
-        ans = ent['category_id']
-#        que = ent['question']
-        
-        #widht = 
-        #height = 
-        
-        #split = 
-        
+        ans = ent['category_id']  
+        W = ent['image_info']['width']
+        H = ent['image_info']['height']
+        que = ent['sentence']['sent']                  
         gtbox = [ent['gtbox']]
         gtbox = torch.tensor(gtbox)
         box_coords = ent['boxes']
         box_coords = torch.tensor(box_coords)
-        L, W, H ,imgarr,box_coords = self._load_image_coco(img_id)
-#        
-#
-#        if self.trainembd:
-#            tokens = tokenize_ques(self.dictionary,que)
-#            qfeat = torch.from_numpy(tokens).long()
-#      
-
-        return sent_id,ans,box_coords.float(),gtbox.float()
+#        L, W, H ,imgarr,box_coords = self._load_image_coco(img_id)      
+        tokens = tokenize_ques(self.dictionary,que)
+        qfeat = torch.from_numpy(tokens).long()
+        return sent_id,ans,box_coords.float(),gtbox.float(),qfeat
 
 #%%
 if __name__ == "__main__":
-    import config
+    import config   
+    ds = 'refcoco+'
+    config.global_config['dictionaryfile'] = config.global_config['dictionaryfile'].format(ds)
+    config.global_config['glove'] = config.global_config['glove'].format(ds)      
     dataloader_kwargs = {}
-    ds = 'refcoco'
     dataloader_kwargs = {**config.global_config , **config.dataset[ds] }
-    dataloader_kwargs['dataset'] = ds
+    dataloader_kwargs['split'] = 'val'
     cd = ReferDataset(**dataloader_kwargs)
     it = iter(cd)
     data =  next(it)
     print (data)
-    sent_id,ans,box_coords,gtbox = data
+    sent_id,ans,box_coords,gtbox,qfeat = data
       
   

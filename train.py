@@ -10,7 +10,7 @@ import os
 import json
 import numpy as np
 import eval_extra
-from CLR import CyclicLR
+#from CLR import CyclicLR
 from utils import adjust_learning_rate
 #%%
 
@@ -145,23 +145,17 @@ def run(**kwargs):
     savefolder = kwargs.get('savefolder')
     logger = kwargs.get('logger')
     epochs = kwargs.get('epochs')
-    isVQAeval = kwargs.get('isVQAeval')
     N_classes = kwargs.get('N_classes')
     test_loader = kwargs.get('test_loader')
     start_epoch = kwargs.get('start_epoch')
     eval_baselines = kwargs.get('nobaselines') == False
-    #DETECT, MUTAN , Zhang , UPdown baselines
 
     if start_epoch == 0 and eval_baselines: # if not resuming
         pass
         #eval_extra.main(**kwargs)
         
     testset = test_loader.dataset.data
-    early_stop = EarlyStopping(monitor='loss',patience=8)
-    
-    clr = CyclicLR(base_lr=0.001, max_lr=0.006,
-                        step_size=1000., mode='triangular2')
-    
+    early_stop = EarlyStopping(monitor='loss',patience=8)   
     Modelsavefreq = 1
 
     for epoch in range(start_epoch,epochs):
@@ -186,16 +180,11 @@ def run(**kwargs):
             pred_reg_clip = pred_reg.clip(min=0,max=N_classes-1).tolist()
             predictions = dict(zip(test['qids'] , pred_reg_clip))
                      
-        if isVQAeval:
-            acc,rmse = eval_extra.evalvqa(testset,predictions,isVQAeval)
-            logger.write("\tRMSE:{:.2f} Accuracy {:.2f}%".format(rmse,acc))
+
+        acc,rmse = eval_extra.evalvqa(testset,predictions)
+        logger.write("\tRMSE:{:.2f} Accuracy {:.2f}%".format(rmse,acc))
           
-        else:            
-            simp_comp = eval_extra.eval_simp_comp(testset,predictions)
-            for d in ['simple','complex']:
-                acc,rmse = simp_comp[d]
-                logger.write("\t{} RMSE:{:.2f} Accuracy {:.2f}%".format(d,rmse,acc))
-            
+
         if kwargs.get('savejson'):
             js = []
             for qid in predictions:

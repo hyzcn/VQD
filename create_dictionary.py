@@ -7,18 +7,12 @@ Created on Wed Aug 29 10:30:29 2018
 """
 import numpy as np
 from config import dataset
-import pickle
 from models.dictionary import Dictionary
 
-def create_dictionary(ds):
-    dictionary = Dictionary()
-    entries = []   
-    for group in ['train','test']:        
-        with open( dataset[ds][group],'rb') as f:
-            d = pickle.load(f)
-            entries.extend(d)
+def create_dictionary(entries):
+    dictionary = Dictionary()   
     for ent in entries:
-        qs = ent['question']
+        qs = ent['sentence']['sent']
         dictionary.tokenize(qs, True)
     return dictionary
 
@@ -44,12 +38,32 @@ def create_glove_embedding_init(idx2word, glove_file):
 
 
 if __name__ == '__main__':
-    ds = 'VQA2'
-    d = create_dictionary(ds)
-    d.dump_to_file('data/dictionary.pickle')
+    import config  
+    import os
+    import os.path as osp
+    import json
+    
+    ds = 'refcocog'
+    kwargs = {**config.global_config , **config.dataset[ds]}
+    data_root = kwargs.get('data_root')
+    dataset = kwargs.get('dataset')
+    splitBy = kwargs.get('splitBy')
+    splits = kwargs.get('splits')   
+    data = []
+    for split in splits:
+        data_json = osp.join('cache/prepro', dataset +"_"+ splitBy , split +'.json')
+        with open(data_json,'r') as f:
+            d = json.load(f)
+            data.extend(d)
+    
+    
+    d = create_dictionary(data)
+    d.dump_to_file(kwargs['dictionaryfile'].format(dataset))
 
-    d = Dictionary.load_from_file('data/dictionary.pickle')
+    d = Dictionary.load_from_file(kwargs['dictionaryfile'].format(dataset))
     emb_dim = 300
-    glove_file = 'data/glove/glove.6B.%dd.txt' % emb_dim
+    glove = 'glove/glove.6B.%dd.txt' % emb_dim
+    embedding_basedir = os.path.dirname(kwargs['glove'])
+    glove_file = embedding_basedir.format(glove)
     weights, word2emb = create_glove_embedding_init(d.idx2word, glove_file)
-    np.save('data/glove6b_init_%dd.npy' % emb_dim, weights)
+    np.save( os.path.join(embedding_basedir.format(ds),'glove6b_init_%dd.npy' % emb_dim), weights)

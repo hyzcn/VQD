@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-from .lang_new import QuestionParser
+from .language import QuestionParser
 
 class RN(nn.Module):
     def __init__(self,Ncls,**kwargs):

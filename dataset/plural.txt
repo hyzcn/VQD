@@ -1,0 +1,80 @@
+person: people
+bicycle: bicycles
+car: cars
+motorcycle: motorcycles
+airplane: airplanes
+bus: busses
+train: trains
+truck: trucks
+boat: boats
+traffic light: traffic lights
+fire hydrant: fire hydrants
+street sign: street signs
+stop sign: stop signs
+parking meter: parking meters
+bench: benches
+bird: birds
+cat: cats
+dog: dogs
+horse: horses
+sheep: sheep
+cow: cows
+elephant: elephants
+bear: bears
+zebra: zebras
+giraffe: giraffes
+hat: hats
+backpack: backpacks
+umbrella: umbrellas
+shoe: shoes
+eye glasses: eye glasses
+handbag: handbags
+tie: ties
+suitcase: suitcases
+frisbee: frisbees
+skis: skis
+snowboard: snowboards
+sports ball: sports balls
+kite: kites
+baseball bat: baseball bats
+baseball glove: baseball gloves
+skateboard: skateboards
+surfboard: surfboards
+tennis racket: tennis rackets
+bottle: bottles
+plate: plates
+wine glass: wine glasses
+cup: cups
+fork: forks
+knife: knives
+spoon: spoons
+bowl: bowls
+banana: bananas
+apple: apples
+sandwich: sandwiches
+orange: oranges
+broccoli: broccoli
+carrot: carrots
+hot dog: hot dogs
+pizza: pizza
+donut: donuts
+cake: cake
+chair: chairs
+couch: couches
+potted plant: potted plants
+bed: beds
+mirror: mirrors
+dining table: dining tables
+window: windows
+desk: desks
+toilet: toilets
+door: doors
+tv: tvs
+laptop: laptops
+mouse: mouse
+remote: remotes
+keyboard: keyboards
+cell phone: cell phones
+microwave: microwaves
+oven: ovens
+toaster: toasters

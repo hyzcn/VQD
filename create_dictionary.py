@@ -43,14 +43,14 @@ if __name__ == '__main__':
     import os.path as osp
     import json
     
-    ds = 'refcocog'
+    ds = 'refcoco+'
     kwargs = {**config.global_config , **config.dataset[ds]}
     data_root = kwargs.get('data_root')
     dataset = kwargs.get('dataset')
     splitBy = kwargs.get('splitBy')
     splits = kwargs.get('splits')   
     data = []
-    for split in splits:
+    for split in splits  + ['train']:
         data_json = osp.join('cache/prepro', dataset +"_"+ splitBy , split +'.json')
         with open(data_json,'r') as f:
             d = json.load(f)
@@ -58,8 +58,10 @@ if __name__ == '__main__':
     
     
     d = create_dictionary(data)
+    basedir = os.path.dirname(kwargs['dictionaryfile'].format(dataset))
+    if not os.path.exists(basedir):
+        os.mkdir(basedir)
     d.dump_to_file(kwargs['dictionaryfile'].format(dataset))
-
     d = Dictionary.load_from_file(kwargs['dictionaryfile'].format(dataset))
     emb_dim = 300
     glove = 'glove/glove.6B.%dd.txt' % emb_dim

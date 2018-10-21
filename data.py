@@ -6,8 +6,6 @@ from models.dictionary import Dictionary
 from models.language import tokenize_ques
 import os.path as osp
 import json
-import copy
-
 from eval_extra import getIOU,convert_xywh_x1y1x2y2
 
 #"""
@@ -50,12 +48,13 @@ class ReferDataset(Dataset):
         dictfile = kwargs.get('dictionaryfile')
         self.dictionary = Dictionary.load_from_file(dictfile)    
         if kwargs.get('testrun'):
-            self.data = self.data[:20]
+            self.data = self.data[:32]
             
         self.spatial = True            
         self.image_features_path_coco = kwargs.get('coco_bottomup')
         self.coco_id_to_index =  self.id_to_index(self.image_features_path_coco)  
-        print ("[[Dataset {} and split {} loaded....]]".format(dataset,split))
+        print ("[[Dataset {} loaded....]]".format(dataset,split))
+        print ("[Split {} has {} ref exps.]".format(split,len(self.data)))
 
     def _process_boxes(self,bboxes,image_w,image_h):
             box_width = bboxes[:, 2] - bboxes[:, 0]
@@ -126,26 +125,25 @@ class ReferDataset(Dataset):
         W = ent['image_info']['width']
         H = ent['image_info']['height']
         que = ent['sentence']['sent']                  
-        gtbox = [ent['gtbox']]
+        gtbox = ent['gtbox']
         gtbox = torch.tensor(gtbox)
+        gtboxorig = convert_xywh_x1y1x2y2(gtbox.unsqueeze(0)).squeeze(0)
         box_coords = ent['boxes']
         box_coords = torch.tensor(box_coords)
 
         L, W, H ,box_feats,box_coords_6d, box_coordsorig = self._load_image_coco(img_id)        
         box_coords_6d = torch.from_numpy(box_coords_6d)
         
-        gtbox = convert_xywh_x1y1x2y2(gtbox)
-        iou = getIOU(gtbox,torch.from_numpy(box_coordsorig))
+        
+        iou = getIOU(gtboxorig.unsqueeze(0),torch.from_numpy(box_coordsorig))
         _,idx = torch.max(iou,dim=0)
 #        print (iou,iou.shape,box_coordsorig,"index",idx)
-        gtbox = box_coordsorig[idx]
-        gtbox = torch.from_numpy(gtbox).unsqueeze(0)
-        
-        
+        gtboxiou = box_coordsorig[idx]
+        gtboxiou = torch.from_numpy(gtboxiou)
         
         tokens = tokenize_ques(self.dictionary,que)
         qfeat = torch.from_numpy(tokens).long()
-        return sent_id,ans,box_feats,box_coords_6d.float(),gtbox.float(),qfeat,L,idx
+        return sent_id,ans,box_feats,box_coordsorig,box_coords_6d.float(),gtboxiou.float(),qfeat,L,idx
 
 #%%
 if __name__ == "__main__":
@@ -160,6 +158,6 @@ if __name__ == "__main__":
     it = iter(cd)
     data =  next(it)
     print (data)
-    sent_id,ans,box_feats,box_coords_6d,gtbox,qfeat,L,idx = data
+    sent_id,ans,box_feats,box_coordsorig,box_coords_6d,gtbox,qfeat,L,idx = data
       
   

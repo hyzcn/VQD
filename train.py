@@ -47,15 +47,18 @@ def main(**kwargs):
     
     with torch.set_grad_enabled(istrain):
         for i, data in enumerate(loader):
-            sent_id,ans,box_feats,box_coords,gtbox,qfeat,L,idx = data            
+            sent_id,ans,box_feats,box_coordsorig,box_coords_6d,gtbox,qfeat,L,idx = data            
             idxs.extend(sent_id.tolist())        
 
-            true.extend(idx.tolist())
+            true.extend(gtbox.tolist())
+            
+            
+            
     
             #normalize the box feats
             box_feats = F.normalize(box_feats,p=2,dim=-1)
             box_feats = box_feats.to(device)
-            box_coords = box_coords.to(device)
+            box_coords_6d = box_coords_6d.to(device)
             q_feats = qfeat.to(device)
             idx = idx.long()
             optimizer.zero_grad()
@@ -65,7 +68,7 @@ def main(**kwargs):
             
             net_kwargs = { 'box_feats':box_feats,
                            'q_feats':q_feats,
-                           'box_coords':box_coords}
+                           'box_coords':box_coords_6d}
 
             scores,logits = net(**net_kwargs)  
             logits = logits.view(B*Nbox,-1)
@@ -81,7 +84,11 @@ def main(**kwargs):
             loss_margin = mmloss(scores,idx.to(device).squeeze())           
             loss = loss_cc + loss_margin           
             _,clspred = torch.max(scores,-1)
-            pred.extend(clspred.data.cpu().numpy().ravel())
+            
+            
+            ii = torch.cat( (torch.tensor(range(0,B)).unsqueeze(1).long(),clspred.cpu().unsqueeze(1).long()),dim=1)
+            predbox = box_coordsorig[ii[:,0],ii[:,1]]
+            pred.extend(predbox.tolist())
         
             loss_meter.update(loss.item())   
             if istrain:
@@ -108,7 +115,7 @@ def main(**kwargs):
         ent['true'] = true
         ent['pred'] = pred
         ent['loss'] = loss_meter.avg
-        ent['qids'] = idxs
+        ent['sent_ids'] = idxs
         return ent
 
 
@@ -119,9 +126,6 @@ def run(**kwargs):
     logger = kwargs.get('logger')
     epochs = kwargs.get('epochs')
     #there are many test loaders
-    test_loaders = kwargs.get('test_loader')
-    test_loader = test_loaders[0]
-#    testset = test_loader.dataset.data
     start_epoch = kwargs.get('start_epoch')
     eval_baselines = kwargs.get('nobaselines') == False
 
@@ -147,33 +151,36 @@ def run(**kwargs):
         logger.write('\tTest Loss: {:.4f}'.format(test['loss']))
         logger.append('test_losses',test['loss'])
                 
-        predictions = dict(zip(test['qids'] , test['pred']))                     
-#        acc = eval_extra.evalvqa(testset,predictions)
-#        logger.write("\tPrecision@1:{:.2f} Accuracy {:.2f}%".format(0,acc))
+        predictions = dict(zip(test['sent_ids'] , test['pred']))   
+        
+        gt = torch.tensor(test['true'])
+        pred = torch.tensor(test['pred'])
+        acc = eval_extra.getaccuracy(gt,pred)
+        logger.write("\tPrecision@1:{:.2f} Accuracy {:.2f}%".format(0,acc))
 
         if kwargs.get('savejson'):
             js = []
             for qid in predictions:
                 ent = {}
-                ent["question_id"] = int(qid)
-                ent["answer"] = int(predictions[qid])
+                ent['sent_id'] = int(qid)
+                ent['bbox'] = predictions[qid]
                 js.append(ent)
             path = os.path.join(savefolder, 'test{}.json'.format(epoch))
             json.dump(js,open(path,'w'))
             
-#        is_best = False
-#        if epoch % Modelsavefreq == 0:
-#            print ('Saving model ....')
-#            tbs = {
-#                'epoch': epoch,
-#                'state_dict': kwargs.get('model').state_dict(),
-#                'true':test['true'],
-#                'pred_reg':test['pred'],
-#                'qids': test['qids'],
-#                'optimizer' : kwargs.get('optimizer').state_dict(),
-#            }
-#
-#            save_checkpoint(savefolder,tbs,is_best)
+        is_best = False
+        if epoch % Modelsavefreq == 0:
+            print ('Saving model ....')
+            tbs = {
+                'epoch': epoch,
+                'state_dict': kwargs.get('model').state_dict(),
+                'true':test['true'],
+                'pred':test['pred'],
+                'sent_ids': test['sent_ids'],
+                'optimizer' : kwargs.get('optimizer').state_dict(),
+            }
+
+            save_checkpoint(savefolder,tbs,is_best)
 
         logger.dump_info()
                 

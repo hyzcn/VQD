@@ -22,11 +22,10 @@ class RN(nn.Module):
         LINsize = 1024
         Boxcoords = 16
 
-        self.Ncls = Ncls
-        #self.Ncls = 1
+        self.Ncls = 2 #either true to false 
         
-        if kwargs.get('trainembd'):       
-            self.QRNN = QuestionParser(dictionaryfile = kwargs['dictionaryfile'],
+     
+        self.QRNN = QuestionParser(dictionaryfile = kwargs['dictionaryfile'],
                                        glove_file = kwargs['glove'],
                                          dropout=0.0, word_dim=Q_embedding,
                                          ques_dim=Q_GRU_out ,
@@ -37,8 +36,16 @@ class RN(nn.Module):
         insize = I_CNN + Q_GRU_out
         self.W = nn.Linear(insize,hidden)
         self.Wprime = nn.Linear(insize,hidden)        
-        self.f = nn.Linear(in_features=hidden,out_features=1,bias=False)      
+        self.fscore = nn.Linear(in_features=hidden,out_features=1,bias=False)      
+        fcls_layers =  [ nn.Linear( I_CNN + Q_GRU_out, LINsize),
+                           nn.ReLU(inplace=True),
+                           #nn.Dropout(0.5),
+                           nn.Linear( LINsize, LINsize),
+                           nn.ReLU(inplace=True),
+                           #nn.Dropout(0.5),
+                           nn.Linear(LINsize,self.Ncls)]
 
+        self.fcls = nn.Sequential(*fcls_layers) 
 
     def forward(self,box_feats,q_feats,box_coords):
 
@@ -51,7 +58,8 @@ class RN(nn.Module):
         y_tilde = torch.tanh(self.W(b_full))
         g = torch.sigmoid(self.Wprime(b_full))
         si = torch.mul(y_tilde, g)# gating   
-        scores = torch.sigmoid(self.f(si))
-        return  scores
+        scores = torch.sigmoid(self.fscore(si))
+        logits =  self.fcls(b_full) 
+        return  scores,logits
 
 

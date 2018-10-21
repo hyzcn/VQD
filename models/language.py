@@ -76,12 +76,4 @@ class QuestionParser(nn.Module):
 if __name__ == '__main__':       
     tokens = tokenize_ques(d,"How many dogs?")
     question = torch.from_numpy(tokens)
-    question = Variable(question).unsqueeze(0)    
-    w_emb = WordEmbedding(d.ntoken, emb_dim =emb_dim, dropout=0.0)
-    w_emb.init_embedding('../data/glove6b_init_{}d.npy'.format(emb_dim))
-    num_hid = 512
-    q_emb = QuestionEmbedding( in_dim = emb_dim, num_hid = num_hid,\
-                              nlayers = 1, bidirect = False, dropout = 0.0,
-                              rnn_type= 'LSTM' )    
-    w_emb = w_emb(question)
-    q_enc = q_emb(w_emb) # [batch, q_dim]
+    question = question.unsqueeze(0)    

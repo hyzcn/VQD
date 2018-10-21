@@ -8,7 +8,6 @@ from utils import load_checkpoint
 from utils import get_current_time
 from utils import Logger
 from opt import parse_args
-import os.path as osp
 from data import ReferDataset
 from train import run
 
@@ -58,14 +57,14 @@ if __name__ == '__main__':
     
    
     trainds = ReferDataset(split = 'train' ,istrain=True,**dskwargs)
-    train_loaders = [DataLoader(trainds, batch_size=args.batch_size,
-                         shuffle=True, **loader_kwargs)]
+    train_loader = DataLoader(trainds, batch_size=args.batch_size,
+                         shuffle=True, **loader_kwargs)
     test_loaders = []
     for split in config.dataset[args.dataset]['splits']:    
         testds = ReferDataset(split = split ,istrain=False,**dskwargs)
-        test_loader = DataLoader(testds, batch_size=args.batch_size,
+        loader = DataLoader(testds, batch_size=args.batch_size,
                                  shuffle=False, **loader_kwargs)
-        test_loaders.append(test_loaders)
+        test_loaders.append(loader)
 
     run_kwargs = {   **vars(args),
                      **config.global_config,
@@ -74,10 +73,10 @@ if __name__ == '__main__':
                      'savefolder': savefolder, 
                      'device' : device, 
                      'model' :  model,
-                     'train_loader': train_loaders,
+                     'train_loader': train_loader,
                      'test_loader': test_loaders,
                      'optimizer' : optimizer,
                      'logger':logger,                    
                   }
 
-#    run(**run_kwargs)
+    run(**run_kwargs)

@@ -205,10 +205,10 @@ class Logger(object):
         if not os.path.exists(dirname):
             os.mkdir(dirname)
         else:
-            feedback = input("Log folder already exists !!!! \nOverwrite & Continue [y/Y]?: ")
-            if feedback not in ['y','Y']:
-                print ("Restart and Save the logfile under different name.")
-                sys.exit(0)
+           print("Log folder already exists !!!! \nOverwrite & Continue [y/Y]?: ")
+#            if feedback not in ['y','Y']:
+#                print ("Restart and Save the logfile under different name.")
+#                sys.exit(0)
 
         self.dirname = dirname
         self.log_file = open(output_name, 'a+')

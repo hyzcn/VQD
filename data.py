@@ -127,6 +127,7 @@ class ReferDataset(Dataset):
         que = ent['sentence']['sent']                  
         gtbox = ent['gtbox']
         gtbox = torch.tensor(gtbox)
+        #boxes from refcoc is in xywh format
         gtboxorig = convert_xywh_x1y1x2y2(gtbox.unsqueeze(0)).squeeze(0)
         box_coords = ent['boxes']
         box_coords = torch.tensor(box_coords)
@@ -134,7 +135,7 @@ class ReferDataset(Dataset):
         L, W, H ,box_feats,box_coords_6d, box_coordsorig = self._load_image_coco(img_id)        
         box_coords_6d = torch.from_numpy(box_coords_6d)
         
-        
+        #boxes in h4files are in x1 y1 x2 y2 format
         iou = getIOU(gtboxorig.unsqueeze(0),torch.from_numpy(box_coordsorig))
         _,idx = torch.max(iou,dim=0)
 #        print (iou,iou.shape,box_coordsorig,"index",idx)

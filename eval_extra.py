@@ -34,6 +34,24 @@ def getIOU(b_ij, b_ji):
     iou = iou.unsqueeze(-1)
     return iou
    
+    
+
+def getaccuracy(gt, pred):
+    """Finds performance metrics like MattNet.
+    Calcultes Ious for each prediciton and gt boxes tensors.
+    Iou > 0.5 is a correct comprehension and hence value of 1
+  
+    ----------
+    returns accuracy value
+    """
+    iou = getIOU(gt,pred)
+    correct = iou > 0.5
+    correct = correct.sum().item()    
+    acc = 100.0 * correct / len(iou)
+    return acc
+    
+    
+
 def compute_overall(predictions):
   """
   check precision and recall for predictions.

@@ -8,6 +8,8 @@ import os.path as osp
 import json
 import copy
 
+from eval_extra import getIOU,convert_xywh_x1y1x2y2
+
 #"""
 #{'ann_id': 1706357,
 # 'category_id': 1,
@@ -38,7 +40,7 @@ class ReferDataset(Dataset):
         splitBy = kwargs.get('splitBy')
         split = kwargs.get('split')
 
-                   
+        
         data_json = osp.join('cache/prepro', dataset +"_"+ splitBy , split +'.json')
         
         with open(data_json,'r') as f:
@@ -53,7 +55,7 @@ class ReferDataset(Dataset):
         self.spatial = True            
         self.image_features_path_coco = kwargs.get('coco_bottomup')
         self.coco_id_to_index =  self.id_to_index(self.image_features_path_coco)  
-   
+        print ("[[Dataset {} and split {} loaded....]]".format(dataset,split))
 
     def _process_boxes(self,bboxes,image_w,image_h):
             box_width = bboxes[:, 2] - bboxes[:, 0]
@@ -108,8 +110,8 @@ class ReferDataset(Dataset):
                 
         if self.spatial:
             spatials = self._process_boxes(box_locations.T,W,H)
-            return L,W,H,box_feats.T,spatials
-        return L,W,H,box_feats.T, box_locations.T 
+            return L,W,H,box_feats.T,spatials,box_locations.T
+        return L,W,H,box_feats.T, box_locations.T
         
     
     def __len__(self):
@@ -128,10 +130,22 @@ class ReferDataset(Dataset):
         gtbox = torch.tensor(gtbox)
         box_coords = ent['boxes']
         box_coords = torch.tensor(box_coords)
-#        L, W, H ,imgarr,box_coords = self._load_image_coco(img_id)      
+
+        L, W, H ,box_feats,box_coords_6d, box_coordsorig = self._load_image_coco(img_id)        
+        box_coords_6d = torch.from_numpy(box_coords_6d)
+        
+        gtbox = convert_xywh_x1y1x2y2(gtbox)
+        iou = getIOU(gtbox,torch.from_numpy(box_coordsorig))
+        _,idx = torch.max(iou,dim=0)
+#        print (iou,iou.shape,box_coordsorig,"index",idx)
+        gtbox = box_coordsorig[idx]
+        gtbox = torch.from_numpy(gtbox).unsqueeze(0)
+        
+        
+        
         tokens = tokenize_ques(self.dictionary,que)
         qfeat = torch.from_numpy(tokens).long()
-        return sent_id,ans,box_coords.float(),gtbox.float(),qfeat
+        return sent_id,ans,box_feats,box_coords_6d.float(),gtbox.float(),qfeat,L,idx
 
 #%%
 if __name__ == "__main__":
@@ -146,6 +160,6 @@ if __name__ == "__main__":
     it = iter(cd)
     data =  next(it)
     print (data)
-    sent_id,ans,box_coords,gtbox,qfeat = data
+    sent_id,ans,box_feats,box_coords_6d,gtbox,qfeat,L,idx = data
       
   

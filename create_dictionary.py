@@ -44,28 +44,29 @@ if __name__ == '__main__':
     import json
     
     ds = 'refcoco+'
-    kwargs = {**config.global_config , **config.dataset[ds]}
-    data_root = kwargs.get('data_root')
-    dataset = kwargs.get('dataset')
-    splitBy = kwargs.get('splitBy')
-    splits = kwargs.get('splits')   
-    data = []
-    for split in splits  + ['train']:
-        data_json = osp.join('cache/prepro', dataset +"_"+ splitBy , split +'.json')
-        with open(data_json,'r') as f:
-            d = json.load(f)
-            data.extend(d)
-    
-    
-    d = create_dictionary(data)
-    basedir = os.path.dirname(kwargs['dictionaryfile'].format(dataset))
-    if not os.path.exists(basedir):
-        os.mkdir(basedir)
-    d.dump_to_file(kwargs['dictionaryfile'].format(dataset))
-    d = Dictionary.load_from_file(kwargs['dictionaryfile'].format(dataset))
-    emb_dim = 300
-    glove = 'glove/glove.6B.%dd.txt' % emb_dim
-    embedding_basedir = os.path.dirname(kwargs['glove'])
-    glove_file = embedding_basedir.format(glove)
-    weights, word2emb = create_glove_embedding_init(d.idx2word, glove_file)
-    np.save( os.path.join(embedding_basedir.format(ds),'glove6b_init_%dd.npy' % emb_dim), weights)
+    for ds in config.dataset:
+        kwargs = {**config.global_config , **config.dataset[ds]}
+        data_root = kwargs.get('data_root')
+        dataset = kwargs.get('dataset')
+        splitBy = kwargs.get('splitBy')
+        splits = kwargs.get('splits')   
+        data = []
+        for split in splits  + ['train']:
+            data_json = osp.join('cache/prepro', dataset +"_"+ splitBy , split +'.json')
+            with open(data_json,'r') as f:
+                d = json.load(f)
+                data.extend(d)
+        
+        
+        d = create_dictionary(data)
+        basedir = os.path.dirname(kwargs['dictionaryfile'].format(dataset))
+        if not os.path.exists(basedir):
+            os.mkdir(basedir)
+        d.dump_to_file(kwargs['dictionaryfile'].format(dataset))
+        d = Dictionary.load_from_file(kwargs['dictionaryfile'].format(dataset))
+        emb_dim = 300
+        glove = 'glove/glove.6B.%dd.txt' % emb_dim
+        embedding_basedir = os.path.dirname(kwargs['glove'])
+        glove_file = embedding_basedir.format(glove)
+        weights, word2emb = create_glove_embedding_init(d.idx2word, glove_file)
+        np.save( os.path.join(embedding_basedir.format(ds),'glove6b_init_%dd.npy' % emb_dim), weights)

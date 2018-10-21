@@ -40,14 +40,14 @@ def create_cache(**kwargs):
             ref['image_info'] = refer.Imgs[image_id]
             sentences = ref.pop('sentences')
             ref.pop('sent_ids')
-            entnew = copy.deepcopy(ref)
-            anns = refer.imgToAnns[image_id]
-            entnew['boxes'] = []
-            for box_ann in anns:
-                entnew['boxes'].append(box_ann['bbox'])
+            coco_boxes_info = refer.imgToAnns[image_id]
+            coco_boxes = [ box_ann['bbox'] for box_ann in coco_boxes_info]
+            gtbox = refer.refToAnn[ref_id]['bbox']
             for sentence in sentences:
+                entnew = copy.deepcopy(ref)
+                entnew['boxes'] = coco_boxes
                 entnew['sentence'] = sentence
-                entnew['gtbox'] = refer.refToAnn[ref_id]['bbox']
+                entnew['gtbox'] = gtbox
                 data.append(entnew)    
             
         data_json = osp.join('cache/prepro', ds +"_"+ splitBy , split +'.json')
@@ -56,7 +56,7 @@ def create_cache(**kwargs):
 
 
 if __name__ == '__main__':
-    
     ds = 'refcoco+'
-    kwargs = {**config.global_config , **config.dataset[ds]}
-    create_cache(**kwargs)
+    for ds in config.dataset:
+        kwargs = {**config.global_config , **config.dataset[ds]}
+        create_cache(**kwargs)

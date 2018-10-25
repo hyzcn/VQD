@@ -31,8 +31,8 @@ def get_coco_labels():
     """
     panop_catg_file_path = '../dataset/panoptic_categories.json'
     categories = json.load(open(panop_catg_file_path))
-    coco_thing_label = list(categories['coco'].values())
-    coco_stuff_label = list(categories['coco-stuff'].values())
+    coco_thing_label = list(categories['things']['label'].values())
+    coco_stuff_label = list(categories['stuff']['label'].values())
     coco_labels = set(coco_thing_label + coco_stuff_label)
     return coco_labels
 

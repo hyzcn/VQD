@@ -16,3 +16,7 @@ rm attributes.json.zip
 wget https://visualgenome.org/static/data/dataset/image_data.json.zip
 unzip image_data.json.zip -d dataset/.
 rm image_data.json.zip
+
+wget https://visualgenome.org/static/data/dataset/relationships_v1_2.json.zip
+unzip relationships_v1_2.json.zip -d dataset/.
+rm relationships_v1_2.json.zip

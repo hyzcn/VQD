@@ -148,3 +148,12 @@ metal: metal
 plastic: plastics
 paper: papers
 cardboard: cardboard
+book: book
+teddy bear: teddy bears
+vase: vases
+clock: clocks
+sink: sinks
+refrigerator: refrigerators
+hair drier: hair driers
+toothbrush: toothbrushes
+scissors: scissors

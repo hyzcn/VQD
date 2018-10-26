@@ -135,20 +135,21 @@ def draw_bbox(url, qa_dict, coco_id, dataset_type, idx=0):
     plt.close("all")
 
 
-def get_catg_name_to_bbox(stats, categories):
+def get_catg_name_to_bbox(stats, coco_labels):
     """
-    Generate a maping of category name to bounding boxes for
+    Generate a mapping of category name to bounding boxes for
     panoptic dataset
     :param stats: Dictionary containing information about bounding box,
                   segmentation info, category id
-    :param categories: A dictionary represents category id to name
+    :param coco_labels: A dictionary of `things` coco labels
     :return: A dictionary of category name/label to bounding boxes
     """
     catg_to_bbox = {}
-    coco_labels = categories['coco']
+    catg_name_to_bbox = dict()
     list_of_dict = stats['segments_info']
     for dictnry in list_of_dict:
         cat_id = str(dictnry['category_id'])
+        # select categories that is present in coco labels
         if cat_id in coco_labels:
             if cat_id in catg_to_bbox:
                 catg_to_bbox[cat_id].append(dictnry['bbox'])
@@ -157,9 +158,9 @@ def get_catg_name_to_bbox(stats, categories):
 
     for cat_id in catg_to_bbox.keys():
         cat_name = coco_labels[str(cat_id)]
-        catg_to_bbox[cat_name] = catg_to_bbox.pop(cat_id)
+        catg_name_to_bbox[cat_name] = catg_to_bbox[cat_id]
 
-    return catg_to_bbox
+    return catg_name_to_bbox
 
 
 def show_n_images(n):

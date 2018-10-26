@@ -91,7 +91,7 @@ def main():
     json file
     :return: None
     """
-    panop_ann_file_p = 'drive/My Drive/VQD/dataset/panoptic_annotations.json'
+    panop_ann_file_p = '../dataset/panoptic_annotations.json'
     annotations = json.load(open(panop_ann_file_p))['annotations']
     odq = ObjectDetectionQues()
     coco_id_to_ques_dict = odq.ques_and_bbox(annotations)

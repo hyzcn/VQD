@@ -1,28 +1,65 @@
 import json
 from utils import *
 
-def create_category_json(label_f):
+
+def create_category_json(train_f):
     """
-    Generate a JSON file with category-id as key and
-    category name as value.
-    :param label_f: MS-COCO labels filepath
+    Generate a JSON file with `things` and `stuff` label
+    and their list of supercategories to generate a tree
+    structure
+    Panoptic train and val has same categories, so used just
+    train categories annotations
+    :param train_f: Panoptic train json file path
     :return: None
     """
-    result = dict()
+    things_label = dict()  # To store COCO things labels as {id:name}
+    stuff_label = dict()  # To store COCO stuff labels as {id:name}
+    t_tree = []  # list of CHILD:PARENT name for things
+    s_tree = []  # list of CHILD:PARENT name for stuff
     dest_file_path = '../dataset/panoptic_categories.json'
-    result['coco'] = {}
-    result['coco-stuff'] = {}
-    with open(label_f, 'r') as fp:
-        for line in fp:
-            id_name = line.strip().split(": ")
-            if int(id_name[0]) <=80:
-                result['coco'][int(id_name[0])] = id_name[1]
-            else:
-                result['coco-stuff'][int(id_name[0])] = id_name[1]
 
-    result['info'] = {'key': 'id', 'value': 'name'}
+    categories = json.load(open(train_f))['categories']
+    for categ in categories:
+        if categ['isthing'] == 1:
+            # Store the COCO things
+            things_label[categ['id']] = categ['name']
+            t_tree.append(categ['name'] + ":" + categ['supercategory'])
+        else:
+            # Store the COCO stuff
+            stuff_label[categ['id']] = categ['name']
+            s_tree.append(categ['name'] + ":" + categ['supercategory'])
+
+    things_outdoor_scatg = ['sports', 'accessory', 'animal', 'outdoor', 'vehicle', 'person']
+    things_indoor_scatg = ['indoor', 'appliance', 'electronic', 'furniture', 'food', 'kitchen']
+    stuff_outdoor_scatg = ['water', 'ground', 'solid', 'sky', 'plant', 'structural', 'building']
+    stuff_indoor_scatg = ['food', 'textile', 'furniture', 'window', 'floor', 'ceiling', 'wall', 'rawmaterial']
+
+    things_outdoor = [child_name + ':OUTDOOR' for child_name in things_outdoor_scatg]
+    things_indoor = [child_name + ':INDOOR' for child_name in things_indoor_scatg]
+    stuff_outdoor = [child_name + ':OUTDOOR' for child_name in stuff_outdoor_scatg]
+    stuff_indoor = [child_name + ':INDOOR' for child_name in stuff_indoor_scatg]
+
+    # Create a CHILD:PARENT mapping which will be useful in constructing
+    # a level-wise tree
+    things_tree = ['CHILD:PARENT'] + ['things:None'] + \
+                  ['OUTDOOR:things'] + ['INDOOR:things'] + \
+                  things_outdoor + things_indoor + t_tree
+    stuff_tree = ['CHILD:PARENT'] + ['stuff:None'] + \
+                 ['OUTDOOR:stuff'] + ['INDOOR:stuff'] + \
+                 stuff_outdoor + stuff_indoor + s_tree
+
+    output_dict = dict()
+    output_dict['things'] = {
+        'label': things_label,
+        'tree': things_tree
+    }
+    output_dict['stuff'] = {
+        'label': stuff_label,
+        'tree': stuff_tree
+    }
+
     with open(dest_file_path, 'w') as fp:
-        json.dump(result, fp)
+        json.dump(output_dict, fp)
     print("DONE! - Generated " + dest_file_path)
 
 
@@ -98,7 +135,6 @@ def create_annotations_json(train_f, val_f):
 if __name__ == '__main__':
     train_f = '../dataset/panoptic_train2017.json'
     val_f = '../dataset/panoptic_val2017.json'
-    label_f = '../dataset/labels.txt'
-    create_category_json(label_f)
+    create_category_json(train_f)
     create_image_json(train_f, val_f)
     create_annotations_json(train_f, val_f)

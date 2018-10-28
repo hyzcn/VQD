@@ -34,8 +34,9 @@ dataset[name]['splitBy'] = 'umd'
 dataset[name]['splits'] = ['val','test']
 
 
-from models import Point
+from models import Point_GTU , Point_noGTU
 #model names
 models = { 
-          'RN_GTU': Point.RN,
+          'GTU': Point_GTU.RN,
+          'Point_noGTU': Point_noGTU.RN,
           } 

@@ -156,7 +156,7 @@ def run(**kwargs):
         gt = torch.tensor(test['true'])
         pred = torch.tensor(test['pred'])
         acc = eval_extra.getaccuracy(gt,pred)
-        logger.write("\tPrecision@1:{:.2f} Accuracy {:.2f}%".format(0,acc))
+        logger.write("\tPrecision@1 Top 1 precision {} Accuracy {:.2f}%".format(acc/100,acc))
 
         if kwargs.get('savejson'):
             js = []

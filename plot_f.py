@@ -55,8 +55,8 @@ def saveimage(ent,boxes):
        xmin,ymin,xmax,ymax  = boxes[i]
        x =[xmin,ymin,xmax,ymax]
        rect = retbox(x)
-       #alpha = abs(scores[i])/ sum(scores)
-       alpha = abs(scores[i])
+       alpha = np.abs(scores[i])/ np.max(np.abs(scores))
+       #alpha = abs(scores[i])
        if i == ansidx:
            plt.plot(rect[:,0],rect[:,1],'g',linewidth=3.0)
            loc = (xmin,0.5*(ymin+ymax))

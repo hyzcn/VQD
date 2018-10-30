@@ -147,16 +147,25 @@ def run(**kwargs):
 
         logger.write('Epoch {} Time {:2.2f} s ------'.format(epoch,total_time))
         logger.write('\tTrain Loss: {:.4f}'.format(train['loss']))
-        logger.append('train_losses',train['loss'])
         logger.write('\tTest Loss: {:.4f}'.format(test['loss']))
-        logger.append('test_losses',test['loss'])
-                
-        predictions = dict(zip(test['sent_ids'] , test['pred']))   
+ 
+        traingt = torch.tensor(train['true'])
+        trainpred = torch.tensor(train['pred'])
+        trainacc = eval_extra.getaccuracy(traingt,trainpred)
+        logger.write("\tTrain Precision@1/Top 1 precision or Accuracy {:.2f}%".format(trainacc))
+              
+        predictions = dict(zip(test['sent_ids'] , test['pred']))           
+        testgt = torch.tensor(test['true'])
+        testpred = torch.tensor(test['pred'])
+        testacc = eval_extra.getaccuracy(testgt,testpred)
+        logger.write("\tTest Precision@1/Top 1 precision or Accuracy {:.2f}%".format(testacc))
         
-        gt = torch.tensor(test['true'])
-        pred = torch.tensor(test['pred'])
-        acc = eval_extra.getaccuracy(gt,pred)
-        logger.write("\tPrecision@1 Top 1 precision {} Accuracy {:.2f}%".format(acc/100,acc))
+        #log extra information in a logger dict
+        logger.append('train_losses',train['loss'])
+        logger.append('test_losses',test['loss'])
+        logger.append('train_acc',trainacc)
+        logger.append('test_acc',testacc)        
+        
 
         if kwargs.get('savejson'):
             js = []

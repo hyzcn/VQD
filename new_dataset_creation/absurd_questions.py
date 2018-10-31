@@ -19,14 +19,15 @@ class AbsurdQuestionSimple:
         self.prefix_type3 = ["Is there a"]
         self.suffix = [None, "in the image", "in the picture"]
 
-    def ques_and_bbox(self, annotations):
+    def ques_and_bbox(self, annotations, num_ques_per_image):
         """
         Generates a mapping of questions to bounding boxes for all MS-COCO
         images. Here bounding boxes are empty since it is an absurd questions
         :param annotations: Panoptic annotations
+        :param num_ques_per_image: Maximum number of questions per image
         :return: dict of questions to empty bounding boxes
         """
-        coco_id_ques_dict = {}
+        coco_id_ques_bbox = {}
         panop_catg_file_p = '../dataset/panoptic_categories.json'
         coco_labels = json.load(open(panop_catg_file_p))['things']['label']
         things_tree, stuff_tree = generate_tree(panop_catg_file_p)
@@ -36,16 +37,18 @@ class AbsurdQuestionSimple:
             if len(catg_names) == 0:
                 questions_dict = dict()
             else:
-                questions_dict = self.ques_to_bboxes_per_image(catg_names, things_tree)
+                questions_dict = self.ques_to_bboxes_per_image(catg_names, things_tree, num_ques_per_image)
 
-            coco_id_ques_dict[coco_img_id] = questions_dict
-        return coco_id_ques_dict
+            coco_id_ques_bbox[str(coco_img_id)] = {'question_bbox': questions_dict}
+        return coco_id_ques_bbox
 
-    def ques_to_bboxes_per_image(self, catg_names, things_tree):
+    def ques_to_bboxes_per_image(self, catg_names, things_tree, num_ques_per_image):
         """
         Generates a mapping of questions to empty bounding boxes for a single
         MS-COCO image
         :param catg_names: mapping of category name to bounding boxes
+        :param things_tree: A root node of MS-COCO things label
+        :param num_ques_per_image: Maximum number of questions per image
         :return: questions to empty bounding boxes mapping
         """
         all_ques_to_bboxes_per_image = dict()
@@ -78,13 +81,12 @@ class AbsurdQuestionSimple:
             all_ques_to_bboxes_per_image[question] = [[]]
 
         # limit the number of questions per image
-        limit_quest_dict_per_image = {}
-        num_of_ques = 2
+        limit_quest_to_bbox_per_image = {}
         for question in all_ques_to_bboxes_per_image:
-            if num_of_ques > 0:
-                limit_quest_dict_per_image[question] = all_ques_to_bboxes_per_image[question]
-                num_of_ques -= 1
-        return limit_quest_dict_per_image
+            if num_ques_per_image > 0:
+                limit_quest_to_bbox_per_image[question] = all_ques_to_bboxes_per_image[question]
+                num_ques_per_image -= 1
+        return limit_quest_to_bbox_per_image
 
 
 class AbsurdQuestionColor:
@@ -149,7 +151,7 @@ class AbsurdQuestionColor:
             all_ques_to_bboxes_per_image[sentence] = bboxes
         return all_ques_to_bboxes_per_image
 
-    def ques_and_bbox(self, attrib_list):
+    def ques_and_bbox(self, attrib_list, num_ques_per_image):
         """
         It generates a tuple of coco images which is a part of visual genome and
         the rest of visual genome dataset containing set of question to bounding boxes.
@@ -164,10 +166,11 @@ class AbsurdQuestionColor:
             8. Jump to step-1 and continue till the end
 
         :param attrib_list: A visual genome attributes annotations
+        :param num_ques_per_image: Maximum number of questions per image
         :return: tuple of coco and visual genome annotations
         """
-        coco_id_ques_dict = dict()
-        vis_id_ques_dict = dict()
+        coco_id_ques_bbox = dict()
+        vis_id_ques_bbox = dict()
         vis_image_annt_dict = json.load(open('../dataset/vis_image_annt.json'))
 
         # Generate a MS-COCO things label tree structure for getting a different
@@ -181,6 +184,7 @@ class AbsurdQuestionColor:
             vis_image_id = attr_dict['image_id']
             attrib = attr_dict['attributes']
             obj_color_keywords_to_bboxes = dict()
+            num_of_ques = num_ques_per_image
             for a in attrib:
                 if 'names' in a and 'attributes' in a:
                     obj_names = a['names']
@@ -200,11 +204,10 @@ class AbsurdQuestionColor:
             all_ques_to_bboxes_per_image = self.ques_to_bboxes_per_image(obj_color_keywords_to_bboxes)
 
             # limit the number of questions per image
-            num_of_ques = 2
-            limit_quest_dict_per_image = dict()
+            limit_quest_bbox_per_image = dict()
             for question in all_ques_to_bboxes_per_image:
                 if num_of_ques > 0:
-                    limit_quest_dict_per_image[question] = all_ques_to_bboxes_per_image[question]
+                    limit_quest_bbox_per_image[question] = all_ques_to_bboxes_per_image[question]
                     num_of_ques -= 1
 
             image_stats = vis_image_annt_dict[str(vis_image_id)]
@@ -212,13 +215,13 @@ class AbsurdQuestionColor:
             # Store the (question, bounding boxes) pair to coco_dict if `coco_id` is present
             # else save it in vis_dict
             if image_stats['coco_id'] is None:
-                vis_id_ques_dict[vis_image_id] = limit_quest_dict_per_image
+                vis_id_ques_bbox[str(vis_image_id)] = limit_quest_bbox_per_image
             else:
-                coco_id_ques_dict[str(image_stats['coco_id'])] = {'qa': limit_quest_dict_per_image,
+                coco_id_ques_bbox[str(image_stats['coco_id'])] = {'question_bbox': limit_quest_bbox_per_image,
                                                                   'vis_height': image_stats['height'],
                                                                   'vis_width': image_stats['width'],
                                                                   'url': image_stats['url']}
-        return coco_id_ques_dict, vis_id_ques_dict
+        return coco_id_ques_bbox, vis_id_ques_bbox
 
 
 def main():
@@ -229,15 +232,17 @@ def main():
     """
     panop_ann_file_p = '../dataset/panoptic_annotations.json'
     annotations = json.load(open(panop_ann_file_p))['annotations']
+    num_ques_per_image = 2
     aqs = AbsurdQuestionSimple()
-    coco_id_to_ques_dict = aqs.ques_and_bbox(annotations)
-    write_to_file(coco_id_to_ques_dict)
+    coco_id_to_ques_bbox = aqs.ques_and_bbox(annotations, num_ques_per_image)
+    write_to_file(coco_id_to_ques_bbox)
 
     visual_genome_attrib_file_p = '../dataset/attributes.json'
     attrib_list = json.load(open(visual_genome_attrib_file_p))
+    num_ques_per_image = 2
     aqc = AbsurdQuestionColor()
-    coco_id_ques_dict, vis_id_ques_dict = aqc.ques_and_bbox(attrib_list)
-    write_to_file(coco_id_ques_dict)
+    coco_id_ques_bbox, vis_id_ques_bbox = aqc.ques_and_bbox(attrib_list, num_ques_per_image)
+    write_to_file(coco_id_ques_bbox)
 
 
 if __name__ == '__main__':

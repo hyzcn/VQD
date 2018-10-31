@@ -60,7 +60,7 @@ def transform_vis_bbox_to_coco_bbox(coco_id_ques_dict):
         new_w_ratio = coco_w / vis_w
         new_h_ratio = coco_h / vis_h
 
-        qa_dict = stats['qa']
+        qa_dict = stats['question_bbox']
         for ques, bboxes in qa_dict.items():
             for i, bbox in enumerate(bboxes):
                 x, y, w, h = bbox
@@ -71,11 +71,11 @@ def transform_vis_bbox_to_coco_bbox(coco_id_ques_dict):
 
                 new_bbox = [new_x, new_y, new_w, new_h]
                 bboxes[i] = new_bbox
-        new_coco_id_ques_dict[coco_id] = stats['qa']
+        new_coco_id_ques_dict[coco_id] = {'question_bbox': stats['question_bbox']}
     return new_coco_id_ques_dict
 
 
-def draw_bbox(url, qa_dict, coco_id, dataset_type, idx=0):
+def draw_bbox(url, qa_dict, coco_id, dataset_type='vqd', idx=0):
     """
     It draws the bounding boxes into an image with questions as title
     of an image
@@ -129,6 +129,9 @@ def draw_bbox(url, qa_dict, coco_id, dataset_type, idx=0):
         i += 1
     if dataset_type == 'vqd':
         plt.xlabel(ques_str)
+
+    plt.xticks([])
+    plt.yticks([])
     plt.title("coco_id: " + str(coco_id) + " URL: " + str(url))
     plt.show()
     # fig.savefig("Images/original_" + str(idx) + ".png")
@@ -179,6 +182,7 @@ def get_unique_categs(stats, coco_labels):
             catg_names.add(coco_labels[str(cat_id)])
     return catg_names
 
+
 def show_n_images(n):
     """
     Display `n` number of images with their respective questions and
@@ -206,6 +210,85 @@ def show_n_images(n):
         draw_bbox(url, qa, image_id, 'vqd', image_id)
 
 
+def create_fresh_file(output_file):
+    """
+    Create a fresh VQD annotation json file without any data
+    :param output_file: VQD annotation file path
+    :return: None
+    """
+    images = json.load(open('../dataset/panoptic_images.json'))['images']
+    output = dict()
+    output['annotations'] = dict()
+
+    for img in images:
+        annt_stats = {
+            'coco_image_id': None,
+            'vis_gen_image_id': None,
+            'coco_url': None,
+            'vis_gen_url:': None,
+            'coco_height': None,
+            'coco_width': None,
+            'vis_gen_height': None,
+            'vis_gen_width': None,
+            'question_id_bbox': None,
+            'file_name': None,
+            'split': None
+        }
+        output['annotations'][str(img)] = annt_stats
+
+    # Write to a file
+    with open(output_file, 'w') as fp:
+        json.dump(output, fp)
+
+
+def save_coco_image_annotations(output_file):
+    """
+    Copy the MS-COCO image annotations from panoptic annotations
+    :param output_file: VQD annotation file path
+    :return: None
+    """
+    coco_images = json.load(open('../dataset/panoptic_images.json'))['images']
+    vqd = json.load(open(output_file))
+    vqd_annotations = vqd['annotations']
+
+    for coco_image_id, annt_stats in vqd_annotations.items():
+        coco_stats = coco_images[coco_image_id]
+        annt_stats['coco_image_id'] = coco_image_id
+        annt_stats['coco_url'] = coco_stats['coco_url']
+        annt_stats['coco_width'] = coco_stats['width']
+        annt_stats['coco_height'] = coco_stats['height']
+        annt_stats['split'] = coco_stats['split']
+        annt_stats['file_name'] = coco_stats['file_name']
+
+    # Write to a file
+    with open(output_file, 'w') as fp:
+        json.dump(vqd, fp)
+
+
+def save_visual_genome_coco_annotations(output_file):
+    """
+    Copy the Visual Genome image annotations
+    :param output_file: VQD annotation file path
+    :return: None
+    """
+    vis_gen_images = json.load(open('../dataset/vis_image_annt.json'))
+    vqd = json.load(open(output_file))
+    vqd_annotations = vqd['annotations']
+
+    for image_id in vis_gen_images.keys():
+        vis_gen_stats = vis_gen_images[image_id]
+        if vis_gen_stats['coco_id'] is not None:
+            annt_stats = vqd_annotations[str(vis_gen_stats['coco_id'])]
+            annt_stats['vis_gen_image_id'] = str(vis_gen_stats['image_id'])
+            annt_stats['vis_gen_url'] = vis_gen_stats['url']
+            annt_stats['vis_gen_width'] = vis_gen_stats['width']
+            annt_stats['vis_gen_height'] = vis_gen_stats['height']
+
+    # Write to a file
+    with open(output_file, 'w') as fp:
+        json.dump(vqd, fp)
+
+
 def write_to_file(coco_id_to_questions_dict):
     """
     Write the VQD data to a JSON file.
@@ -218,38 +301,27 @@ def write_to_file(coco_id_to_questions_dict):
     # Check if output file path exist
     exist = os.path.isfile(output_file)
 
-    if exist:
-        output = json.load(open(output_file))
-        annotations = output['annotations']
-        for coco_img_id, questions_dict in coco_id_to_questions_dict.items():
-            if str(coco_img_id) in annotations:
-                annt_stats = annotations[str(coco_img_id)]
-                # If no previous question found for coco image id, then assign the current
-                # question and bounding boxes as an answer, else just append the new questions
-                # to their respective bounding boxes.
-                if len(annt_stats['qa']) == 0:
-                    annt_stats['qa'] = questions_dict
-                else:
-                    for ques, bboxes in questions_dict.items():
-                        annt_stats['qa'][ques] = bboxes
-            else:
-                print("TODO")
-    else:
-        images = json.load(open('../dataset/panoptic_images.json'))['images']
-        output = dict()
-        output['annotations'] = dict()
-        for coco_img_id, questions_dict in coco_id_to_questions_dict.items():
-            image_stat = images[coco_img_id]
-            annt_stats = {
-                'filename': image_stat['file_name'],
-                'coco_url': image_stat['coco_url'],
-                'height': image_stat['height'],
-                'width': image_stat['width'],
-                'split': image_stat['split'],
-                'qa': questions_dict
-            }
+    if not exist:
+        create_fresh_file(output_file)
+        save_coco_image_annotations(output_file)
+        save_visual_genome_coco_annotations(output_file)
 
-            output['annotations'][coco_img_id] = annt_stats
+    output = json.load(open(output_file))
+    annotations = output['annotations']
+    for coco_img_id, questions_dict in coco_id_to_questions_dict.items():
+        if coco_img_id in annotations:
+            annt_stats = annotations[str(coco_img_id)]
+            # If no previous question found for coco image id, then assign the current
+            # question and bounding boxes as an answer, else just append the new questions
+            # to their respective bounding boxes.
+            if len(questions_dict) > 0:
+                ques_bbox = questions_dict['question_bbox']
+                if annt_stats['question_id_bbox'] is None or \
+                        len(annt_stats['question_id_bbox']) == 0:
+                    annt_stats['question_id_bbox'] = ques_bbox
+                else:
+                    for ques, bboxes in ques_bbox.items():
+                        annt_stats['question_id_bbox'][ques] = bboxes
 
     # Write to a file
     with open(output_file, 'w') as fp:

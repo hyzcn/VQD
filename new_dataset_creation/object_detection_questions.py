@@ -15,14 +15,15 @@ class ObjectDetectionQues:
         self.suffix = [None, "in the image", "in the picture"]
         self.plural = load_plural()
 
-    def ques_and_bbox(self, annotations):
+    def ques_and_bbox(self, annotations, num_ques_per_image):
         """
         Generates a mapping of questions to bounding boxes for all MS-COCO
         images
         :param annotations: Panoptic annotations
+        :param num_ques_per_image: Maximum number of questions per image
         :return: dict of questions to bounding boxes
         """
-        coco_id_ques_dict = {}
+        coco_id_ques_bbox = {}
         panop_catg_file_p = '../dataset/panoptic_categories.json'
         coco_labels = json.load(open(panop_catg_file_p))['things']['label']
 
@@ -31,19 +32,20 @@ class ObjectDetectionQues:
             if len(catg_name_to_bbox) == 0:
                 questions_dict = dict()
             else:
-                questions_dict = self.ques_to_bboxes_per_image(catg_name_to_bbox)
+                questions_dict = self.ques_to_bboxes_per_image(catg_name_to_bbox, num_ques_per_image)
 
-            coco_id_ques_dict[coco_img_id] = questions_dict
-        return coco_id_ques_dict
+            coco_id_ques_bbox[str(coco_img_id)] = {'question_bbox': questions_dict}
+        return coco_id_ques_bbox
 
-    def ques_to_bboxes_per_image(self, catg_name_to_bbox):
+    def ques_to_bboxes_per_image(self, catg_name_to_bbox, num_ques_per_image):
         """
         Generates a mapping of questions to bounding boxes for a single
         MS-COCO image
         :param catg_name_to_bbox: mapping of category name to bounding boxes
+        :param num_ques_per_image: Maximum number of questions per image
         :return: questions to bounding boxes mapping
         """
-        all_ques_to_bboxes_per_image = {}
+        all_ques_to_bboxes_per_image = dict()
         for name, bbox in catg_name_to_bbox.items():
             if len(bbox) > 1:
                 # Get the plural name if more than one bounding boxes
@@ -73,16 +75,15 @@ class ObjectDetectionQues:
             all_ques_to_bboxes_per_image[question] = bbox
 
         # limit the number of questions per image
-        limit_quest_dict_per_image = {}
+        limit_quest_to_bbox_per_image = {}
         sort_seq = random.choice([True, False])
-        num_of_ques = 2
         for k in sorted(all_ques_to_bboxes_per_image,
                         key=lambda k: len(all_ques_to_bboxes_per_image[k]),
                         reverse=sort_seq):
-            if num_of_ques > 0:
-                limit_quest_dict_per_image[k] = all_ques_to_bboxes_per_image[k]
-                num_of_ques -= 1
-        return limit_quest_dict_per_image
+            if num_ques_per_image > 0:
+                limit_quest_to_bbox_per_image[k] = all_ques_to_bboxes_per_image[k]
+                num_ques_per_image -= 1
+        return limit_quest_to_bbox_per_image
 
 
 def main():
@@ -94,8 +95,9 @@ def main():
     panop_ann_file_p = '../dataset/panoptic_annotations.json'
     annotations = json.load(open(panop_ann_file_p))['annotations']
     odq = ObjectDetectionQues()
-    coco_id_to_ques_dict = odq.ques_and_bbox(annotations)
-    write_to_file(coco_id_to_ques_dict)
+    num_ques_per_image = 2
+    coco_id_to_ques_bbox = odq.ques_and_bbox(annotations, num_ques_per_image)
+    write_to_file(coco_id_to_ques_bbox)
 
 
 if __name__ == '__main__':

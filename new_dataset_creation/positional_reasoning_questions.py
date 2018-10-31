@@ -76,7 +76,7 @@ class PositionReasoningQues:
                         bboxes[0] + ' ' + bboxes[1] + ' ' + bboxes[2] + ' ' + bboxes[3]
         return sent_bbox
 
-    def get_ques_and_bbox(self, relation_list):
+    def get_ques_and_bbox(self, relation_list, num_ques_per_image):
         """
         It generates a tuple of coco images which is a part of visual genome and
         the rest of visual genome dataset containing set of question to bounding boxes.
@@ -94,16 +94,18 @@ class PositionReasoningQues:
         It also transform the coordinates of visual genome bounding boxes into a
         MS-COCO bounding boxes
         :param relation_list: A visual genome attributes annotations
+        :param num_ques_per_image: Maximum number of questions per image
         :return: A tuple of coco and visual genome annotations
         """
-        coco_id_ques_dict = dict()
-        vis_id_ques_dict = dict()
+        coco_id_ques_bbox = dict()
+        vis_id_ques_bbox = dict()
         vis_image_annt_dict = json.load(open('../dataset/vis_image_annt.json'))
 
         for i, rel_dict in enumerate(relation_list):
             rel = rel_dict['relationships']
             vis_image_id = rel_dict['image_id']
             uniq_sent_single_bbox = set()
+            num_of_ques = num_ques_per_image
 
             for rel_annt in rel:
                 pred = rel_annt['predicate'].lower()
@@ -117,12 +119,11 @@ class PositionReasoningQues:
             ques_bbox_dict_per_image = self.sent_bbox_to_ques_bbox(uniq_sent_single_bbox)
 
             # limit the number of questions per image
-            num_of_ques = 2
-            limit_quest_dict_per_image = dict()
+            limit_quest_bbox_per_image = dict()
             for k in sorted(ques_bbox_dict_per_image, key=lambda k: len(ques_bbox_dict_per_image[k]),
                             reverse=True):
                 if num_of_ques > 0:
-                    limit_quest_dict_per_image[k] = ques_bbox_dict_per_image[k]
+                    limit_quest_bbox_per_image[k] = ques_bbox_dict_per_image[k]
                     num_of_ques -= 1
 
             image_stats = vis_image_annt_dict[str(vis_image_id)]
@@ -130,16 +131,16 @@ class PositionReasoningQues:
             # Store the (question, bounding boxes) pair to coco_dict if `coco_id` is present
             # else save it in vis_dict
             if image_stats['coco_id'] is None:
-                vis_id_ques_dict[vis_image_id] = limit_quest_dict_per_image
+                vis_id_ques_bbox[str(vis_image_id)] = limit_quest_bbox_per_image
             else:
-                coco_id_ques_dict[image_stats['coco_id']] = {'qa': limit_quest_dict_per_image,
+                coco_id_ques_bbox[str(image_stats['coco_id'])] = {'question_bbox': limit_quest_bbox_per_image,
                                                              'vis_height': image_stats['height'],
                                                              'vis_width': image_stats['width'],
                                                              'url': image_stats['url']}
         # Transform the bounding boxes from visual genome image dimension to a
         # MS-COCO image dimension
-        coco_id_ques_dict = transform_vis_bbox_to_coco_bbox(coco_id_ques_dict)
-        return coco_id_ques_dict, vis_id_ques_dict
+        coco_id_ques_bbox = transform_vis_bbox_to_coco_bbox(coco_id_ques_bbox)
+        return coco_id_ques_bbox, vis_id_ques_bbox
 
 
 if __name__ == '__main__':
@@ -150,6 +151,7 @@ if __name__ == '__main__':
     """
     relationship_path = '../dataset/relationships.json'
     relation_list = json.load(open(relationship_path))
+    num_ques_per_image = 2
     prq = PositionReasoningQues()
-    coco_id_ques_dict, vis_id_ques_dict = prq.get_ques_and_bbox(relation_list)
-    write_to_file(coco_id_ques_dict)
+    coco_id_ques_bbox, vis_id_ques_bbox = prq.get_ques_and_bbox(relation_list, num_ques_per_image)
+    write_to_file(coco_id_ques_bbox)

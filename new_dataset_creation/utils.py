@@ -163,6 +163,22 @@ def get_catg_name_to_bbox(stats, coco_labels):
     return catg_name_to_bbox
 
 
+def get_unique_categs(stats, coco_labels):
+    """
+    Get the MS-COCO label names from label or category id
+    :param stats: Panoptic Annotation of a single image
+    :param coco_labels: label id to name dict
+    :return: category names
+    """
+    catg_names = set()
+    list_of_dict = stats['segments_info']
+    for dictnry in list_of_dict:
+        cat_id = str(dictnry['category_id'])
+        # select categories that is present in coco labels
+        if cat_id in coco_labels:
+            catg_names.add(coco_labels[str(cat_id)])
+    return catg_names
+
 def show_n_images(n):
     """
     Display `n` number of images with their respective questions and

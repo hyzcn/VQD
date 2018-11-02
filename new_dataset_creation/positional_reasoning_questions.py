@@ -26,21 +26,32 @@ class PositionReasoningQues:
                          'to right of', 'to left of', 'in back of', 'behind a'}
         return relationships
 
+    def check_redundant_bbox(self, new_bbox, obj_color_keywords_to_bboxes):
+        """
+        Check for redundant bounding box with IOU if same object is present
+        with different color attributes
+        :param new_bbox: New bounding box to add or not
+        :param obj_color_keywords_to_bboxes: Existing bounding boxes
+        :return: True if it's unique else False
+        """
+        for sent, bboxes in obj_color_keywords_to_bboxes.items():
+            for bbox in bboxes:
+                if not bb_iou(new_bbox, bbox):
+                    return False
+        return True
+
     def sent_bbox_to_ques_bbox(self, sent_box):
         """
         It transform the (subject, predicate, object) sentence to a positional
         reasoning type question and map question of their respective bounding
         boxes.
-        e.g.: sent_box: ['man<=>behind<=>car<=>50 100 70 80']
-        :param sent_box: A sentence containing (subject, predicate, object, bounding box)
+        :param sent_box: A sentence containing (subject, predicate, object) and bounding box
                          separated by delimiter
         :return: A dictionary with mapping of question to bounding boxes
         """
         ques_bbox_dict = dict()
-        for elem in sent_box:
-            sent, bbox = elem.rsplit(self.delimiter, 1)
+        for sent, bboxes in sent_box.items():
             subj, predicate, obj = sent.split(self.delimiter)
-            bbox = [[int(i) for i in bbox.split(' ')]]
 
             prefix = random.choice(self.prefix)
             if prefix.startswith("Show"):
@@ -54,27 +65,28 @@ class PositionReasoningQues:
                 eos = self.eos[0]
                 question = prefix + ' ' + subj + ' ' + middle + ' ' + predicate + ' ' + obj + eos
 
-            ques_bbox_dict[question] = bbox
+            ques_bbox_dict[question] = bboxes
         return ques_bbox_dict
 
     def get_subj_pred_obj_and_bboxes(self, rel_annt):
         """
-        It forms a unique pair of (subject, predicate, object, bounding box)
+        It forms a unique pair of (subject, predicate, object) and bounding box
         separated by delimiter
         :param rel_annt: A single instance relationship dict of an image
-        :return: A string representations of (subject, predicate, object, bounding box)
+        :return: A sentence and bounding box
         """
         sub_name = rel_annt['subject']['name']
         predicate = rel_annt['predicate']
         obj_name = rel_annt['object']['name']
-        sent_bbox = None
+        sent = None
+        bbox = None
         if sub_name != obj_name:
-            bboxes = [str(rel_annt['subject']['x']), str(rel_annt['subject']['y']),
-                      str(rel_annt['subject']['w']), str(rel_annt['subject']['h'])]
-            sent_bbox = sub_name + self.delimiter + predicate + \
-                        self.delimiter + obj_name + self.delimiter + \
-                        bboxes[0] + ' ' + bboxes[1] + ' ' + bboxes[2] + ' ' + bboxes[3]
-        return sent_bbox
+            bboxes = [int(rel_annt['subject']['x']), int(rel_annt['subject']['y']),
+                      int(rel_annt['subject']['w']), int(rel_annt['subject']['h'])]
+            sent = sub_name + self.delimiter + predicate + \
+                   self.delimiter + obj_name
+            bbox = [bboxes[0], bboxes[1], bboxes[2], bboxes[3]]
+        return sent, bbox
 
     def get_ques_and_bbox(self, relation_list, num_ques_per_image):
         """
@@ -102,21 +114,31 @@ class PositionReasoningQues:
         vis_image_annt_dict = json.load(open('../dataset/vis_image_annt.json'))
 
         for i, rel_dict in enumerate(relation_list):
+            sentence_keywords_to_bboxes = dict()
             rel = rel_dict['relationships']
             vis_image_id = rel_dict['image_id']
-            uniq_sent_single_bbox = set()
             num_of_ques = num_ques_per_image
 
             for rel_annt in rel:
                 pred = rel_annt['predicate'].lower()
                 # only for positional reasoning relationships
                 if pred in self.relationships:
-                    sent_bboxes = self.get_subj_pred_obj_and_bboxes(rel_annt)
-                    if sent_bboxes is not None:
-                        uniq_sent_single_bbox.add(sent_bboxes)
+                    sent, bbox = self.get_subj_pred_obj_and_bboxes(rel_annt)
+                    if sent is not None:
+                        if sent in sentence_keywords_to_bboxes:
+                            existing_bboxes = sentence_keywords_to_bboxes[sent]
+                            to_add = True
+                            for ex_bbox in existing_bboxes:
+                                if not bb_iou(ex_bbox, bbox):
+                                    to_add = False
+                            if to_add:
+                                sentence_keywords_to_bboxes[sent].append(bbox)
+                        else:
+                            if self.check_redundant_bbox(bbox, sentence_keywords_to_bboxes):
+                                sentence_keywords_to_bboxes[sent] = [bbox]
 
             # A sentence of (subject, predicate, object, bounding box) to (question, bounding box)
-            ques_bbox_dict_per_image = self.sent_bbox_to_ques_bbox(uniq_sent_single_bbox)
+            ques_bbox_dict_per_image = self.sent_bbox_to_ques_bbox(sentence_keywords_to_bboxes)
 
             # limit the number of questions per image
             limit_quest_bbox_per_image = dict()

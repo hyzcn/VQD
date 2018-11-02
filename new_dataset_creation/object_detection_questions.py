@@ -97,7 +97,7 @@ def main():
     odq = ObjectDetectionQues()
     num_ques_per_image = 2
     coco_id_to_ques_bbox = odq.ques_and_bbox(annotations, num_ques_per_image)
-    write_to_file(coco_id_to_ques_bbox)
+    write_to_file(coco_id_to_ques_bbox, 'simple')
 
 
 if __name__ == '__main__':

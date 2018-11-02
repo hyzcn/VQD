@@ -183,7 +183,7 @@ def main():
     num_ques_per_image = 2
     crq = ColorReasoningQues()
     coco_id_ques_bbox, vis_id_ques_bbox = crq.ques_and_bbox(attrib_list, num_ques_per_image)
-    write_to_file(coco_id_ques_bbox)
+    write_to_file(coco_id_ques_bbox, 'color')
 
 
 if __name__ == '__main__':

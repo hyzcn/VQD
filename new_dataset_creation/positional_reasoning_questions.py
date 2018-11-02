@@ -176,4 +176,4 @@ if __name__ == '__main__':
     num_ques_per_image = 2
     prq = PositionReasoningQues()
     coco_id_ques_bbox, vis_id_ques_bbox = prq.get_ques_and_bbox(relation_list, num_ques_per_image)
-    write_to_file(coco_id_ques_bbox)
+    write_to_file(coco_id_ques_bbox, 'positional')

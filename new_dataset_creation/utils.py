@@ -138,9 +138,10 @@ def draw_bbox(url, qa_dict, coco_id, dataset_type='vqd', idx=0):
 
     i = 0
     # Same color bounding boxes for each question type
-    for ques, bboxes in qa_dict.items():
+    for ques, bboxes_ques_type in qa_dict.items():
         ec = edge_color[i % len(edge_color)]
         ques_str = ques_str + ques + "(" + str(ec) + ")" + "\n"
+        bboxes = bboxes_ques_type[0]
 
         for bb_coord in bboxes:
             if len(bb_coord) != 0:
@@ -259,7 +260,7 @@ def create_fresh_file(output_file):
             'coco_image_id': None,
             'vis_gen_image_id': None,
             'coco_url': None,
-            'vis_gen_url:': None,
+            'vis_gen_url': None,
             'coco_height': None,
             'coco_width': None,
             'vis_gen_height': None,
@@ -323,7 +324,7 @@ def save_visual_genome_coco_annotations(output_file):
         json.dump(vqd, fp)
 
 
-def write_to_file(coco_id_to_questions_dict):
+def write_to_file(coco_id_to_questions_dict, question_type):
     """
     Write the VQD data to a JSON file.
     :param coco_id_to_questions_dict: A dictionary containing mapping of coco
@@ -352,10 +353,10 @@ def write_to_file(coco_id_to_questions_dict):
                 ques_bbox = questions_dict['question_bbox']
                 if annt_stats['question_id_bbox'] is None or \
                         len(annt_stats['question_id_bbox']) == 0:
-                    annt_stats['question_id_bbox'] = ques_bbox
-                else:
-                    for ques, bboxes in ques_bbox.items():
-                        annt_stats['question_id_bbox'][ques] = bboxes
+                    annt_stats['question_id_bbox'] = dict()
+
+                for ques, bboxes in ques_bbox.items():
+                    annt_stats['question_id_bbox'][ques] = [bboxes, question_type]
 
     # Write to a file
     with open(output_file, 'w') as fp:

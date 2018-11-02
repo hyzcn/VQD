@@ -235,14 +235,14 @@ def main():
     num_ques_per_image = 2
     aqs = AbsurdQuestionSimple()
     coco_id_to_ques_bbox = aqs.ques_and_bbox(annotations, num_ques_per_image)
-    write_to_file(coco_id_to_ques_bbox)
+    write_to_file(coco_id_to_ques_bbox, 'simple')
 
     visual_genome_attrib_file_p = '../dataset/attributes.json'
     attrib_list = json.load(open(visual_genome_attrib_file_p))
     num_ques_per_image = 2
     aqc = AbsurdQuestionColor()
     coco_id_ques_bbox, vis_id_ques_bbox = aqc.ques_and_bbox(attrib_list, num_ques_per_image)
-    write_to_file(coco_id_ques_bbox)
+    write_to_file(coco_id_ques_bbox, 'color')
 
 
 if __name__ == '__main__':

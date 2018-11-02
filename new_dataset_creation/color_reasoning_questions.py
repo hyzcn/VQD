@@ -30,6 +30,20 @@ class ColorReasoningQues:
                  'brown', 'silver', 'gold', 'navy'}
         return color
 
+    def check_redundant_bbox(self, new_bbox, obj_color_keywords_to_bboxes):
+        """
+        Check for redundant bounding box with IOU if same object is present
+        with different color attributes
+        :param new_bbox: New bounding box to add or not
+        :param obj_color_keywords_to_bboxes: Existing bounding boxes
+        :return: True if it's unique else False
+        """
+        for sent, bboxes in obj_color_keywords_to_bboxes.items():
+            for bbox in bboxes:
+                if not bb_iou(new_bbox, bbox):
+                    return False
+        return True
+
     def ques_to_bboxes_per_image(self, obj_color_keywords_to_bboxes):
         """
         It forms a questions based on object and color word and then
@@ -116,10 +130,18 @@ class ColorReasoningQues:
                                 # is more than one object present of same category
                                 if sent in obj_color_keywords_to_bboxes:
                                     x, y, w, h = a['x'], a['y'], a['w'], a['h']
-                                    obj_color_keywords_to_bboxes[sent].append([x, y, w, h])
+                                    existing_bboxes = obj_color_keywords_to_bboxes[sent]
+                                    to_add = True
+                                    for bbox in existing_bboxes:
+                                        if not bb_iou(bbox, [x, y, w, h]):
+                                            to_add = False
+
+                                    if to_add:
+                                        obj_color_keywords_to_bboxes[sent].append([x, y, w, h])
                                 else:
                                     x, y, w, h = a['x'], a['y'], a['w'], a['h']
-                                    obj_color_keywords_to_bboxes[sent] = [[x, y, w, h]]
+                                    if self.check_redundant_bbox([x, y, w, h], obj_color_keywords_to_bboxes):
+                                        obj_color_keywords_to_bboxes[sent] = [[x, y, w, h]]
 
             # Transform the (object, color) name pair to a question
             all_ques_to_bboxes_per_image = self.ques_to_bboxes_per_image(obj_color_keywords_to_bboxes)
@@ -140,9 +162,9 @@ class ColorReasoningQues:
                 vis_id_ques_bbox[str(vis_image_id)] = limit_quest_bbox_per_image
             else:
                 coco_id_ques_bbox[str(image_stats['coco_id'])] = {'question_bbox': limit_quest_bbox_per_image,
-                                                             'vis_height': image_stats['height'],
-                                                             'vis_width': image_stats['width'],
-                                                             'url': image_stats['url']}
+                                                                  'vis_height': image_stats['height'],
+                                                                  'vis_width': image_stats['width'],
+                                                                  'url': image_stats['url']}
 
         # Transform the bounding boxes from visual genome image dimension to a
         # MS-COCO image dimension

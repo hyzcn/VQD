@@ -46,10 +46,10 @@ html = """<!DOCTYPE html>
 
 
 htmls = """<table class="table table-bordered">
-<thead><tr><th>Dataset</th><th>Model Details</th><th>Performance</th></tr></thead>
+<thead><tr><th>Dataset</th><th>Model</th><th>Eval Details</th><th>Performance</th></tr></thead>
 <tbody>"""
 
-row = """<tr><td>{}</td><td>{}</td><td>{}</td></tr>"""
+row = """<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>"""
 
 htmle = """
 </tbody>
@@ -63,15 +63,16 @@ def hello_world():
     folders = sorted(folders)
     rows = ''
     for folder in folders:
-        name = ' '.join(folder.split("_")[1:])[:-1]
+        name = ' '.join(folder.split("_")[2:])[:-1]
         ds = folder.split("_")[0]
+        model = folder.split("_")[1]
         try:
             js = parsejson( os.path.join(folder,'infos.json'))
             acc = max(js['test acc'])
             description = '{:.2f}%'.format(acc)
         except:
             description = 'Not found'
-        rows += row.format(ds,name,description)
+        rows += row.format(ds,model,name,description)
     table = htmls + rows + htmle
     htmlstr = html.format(table)
     return htmlstr

@@ -39,6 +39,9 @@ class RN(nn.Module):
     
         self.fcommon = nn.Sequential(*common_layers) 
         
+        #B x 100 x 1024         
+        self.bn1 = nn.BatchNorm1d(num_features=100)
+        
         fscore_layers =  [ nn.ReLU(inplace=True),
                            nn.Linear(LINsize,1)]
         
@@ -58,10 +61,11 @@ class RN(nn.Module):
         qst = qst.repeat(1, d, 1)        
         b_full = torch.cat([box_feats,qst,box_coords],-1)            
         common = self.fcommon(b_full)
-        scores = self.fscore(common)
+        common_batch = self.bn1(common)
+        scores = self.fscore(common_batch)
         # dont know why clone is needed here
         #backward was shgowing some error
-        logits =  self.fcls(common.clone()) 
+        logits =  self.fcls(common_batch.clone()) 
         return  scores,logits
 
 

@@ -24,9 +24,6 @@ from utils import parsejson
 STATIC_FOLDER = 'example'
 app = Flask(__name__,static_folder=STATIC_FOLDER)
 
-folders = glob.glob('refcoco*/')
-folders = sorted(folders)
-
 html = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -62,7 +59,8 @@ htmle = """
 
 @app.route('/')
 def hello_world():
-    global folders
+    folders = glob.glob('refcoco*/')
+    folders = sorted(folders)
     rows = ''
     for folder in folders:
         name = ' '.join(folder.split("_")[1:])[:-1]

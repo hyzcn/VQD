@@ -9,6 +9,11 @@ import numpy as np
 from config import dataset
 from models.dictionary import Dictionary
 
+#this verifies what I am doing is right
+# so create dictionary for train and test into a combined
+# the test embeddings will  not be updated during train 
+#https://github.com/allenai/allennlp/issues/516
+
 def create_dictionary(entries):
     dictionary = Dictionary()   
     for ent in entries:

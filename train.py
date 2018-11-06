@@ -68,9 +68,10 @@ def main(**kwargs):
             
             net_kwargs = { 'box_feats':box_feats,
                            'q_feats':q_feats,
-                           'box_coords':box_coords_6d}
+                           'box_coords':box_coords_6d,
+                           'index':L}
 
-            scores,logits = net(**net_kwargs)  
+            scores,logits = net(**net_kwargs)            
             logits = logits.view(B*Nbox,-1)
             
             ii = torch.cat( (torch.tensor(range(0,B)).unsqueeze(1).long(),idx),dim=1)            
@@ -86,8 +87,8 @@ def main(**kwargs):
             _,clspred = torch.max(scores,-1)
             
             
-            ii = torch.cat( (torch.tensor(range(0,B)).unsqueeze(1).long(),clspred.cpu().unsqueeze(1).long()),dim=1)
-            predbox = box_coordsorig[ii[:,0],ii[:,1]]
+            iipred = torch.cat( (torch.tensor(range(0,B)).unsqueeze(1).long(),clspred.cpu().unsqueeze(1).long()),dim=1)
+            predbox = box_coordsorig[iipred[:,0],iipred[:,1]]
             pred.extend(predbox.tolist())
         
             loss_meter.update(loss.item())   
@@ -161,10 +162,10 @@ def run(**kwargs):
         logger.write("\tTest Precision@1/Top 1 precision or Accuracy {:.2f}%".format(testacc))
         
         #log extra information in a logger dict
-        logger.append('train_losses',train['loss'])
-        logger.append('test_losses',test['loss'])
-        logger.append('train_acc',trainacc)
-        logger.append('test_acc',testacc)        
+        logger.append('train loss',train['loss'])
+        logger.append('test loss',test['loss'])
+        logger.append('train acc',trainacc)
+        logger.append('test acc',testacc)        
         
 
         if kwargs.get('savejson'):

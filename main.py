@@ -27,7 +27,7 @@ if __name__ == '__main__':
     N_classes = 20 # xxx change this
     model = config.models.get(args.model,None)
     if model is None:
-        print ("Model name not found valid names are: {} ".format(config.models))
+        print ("Model name not found !!\nvalid names are: {} ".format(config.models))
         sys.exit(0)
         
     config.global_config['dictionaryfile'] = config.global_config['dictionaryfile'].format(args.dataset)

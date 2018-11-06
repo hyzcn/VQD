@@ -7,9 +7,9 @@ def parse_args():
     # Data input settings
     parser.add_argument('--dataset', type=str, default='refcoco', help='name of dataset')
     # Optimization: General
-    parser.add_argument('--batch_size', type=int, default=32)
+    parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--epochs', type=int,help='Number of epochs',default=50)
-    parser.add_argument('--model', help='Model Q | I| QI | Main | RN',default='RN_GTU')
+    parser.add_argument('--model', help='Model Q | I| QI | Main | RN',default='RN')
     parser.add_argument('--lr', type=float,default=0.0003,help='Learning rate')
     parser.add_argument('--save', help='save folder name',default='0')
     parser.add_argument('--seed', type=int, default=1111, help='random seed')

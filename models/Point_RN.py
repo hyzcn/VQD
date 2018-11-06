@@ -48,7 +48,8 @@ class RN(nn.Module):
                            nn.Linear(LINsize,self.Ncls)]
 
         self.fcls = nn.Sequential(*fcls_layers) 
-
+        self.device = next(self.fcls.parameters()).device
+        #self.device = torch.device("cuda")
 
     @staticmethod
     def get_spatials(b):
@@ -80,10 +81,13 @@ class RN(nn.Module):
         up_down = torch.max(0*up_down, up_down)
 
         overlap = left_right * up_down
+        
+        eps = 1e-6
+        #division by zero may cause nans in gradient
 
-        iou = overlap / (area_ij + area_ji - overlap)
-        o_ij = overlap / area_ij
-        o_ji = overlap / area_ji
+        iou = overlap / (area_ij + eps + area_ji - overlap)
+        o_ij = overlap / (area_ij + eps)
+        o_ji = overlap / (area_ji + eps)
 
         iou = iou.unsqueeze(-1)  # (k, k, 1)
         o_ij = o_ij.unsqueeze(-1)  # (k, k, 1)
@@ -111,8 +115,8 @@ class RN(nn.Module):
 
             qst = q_rnn_idx.unsqueeze(1).expand(N,N,-1)
             
-            o_j = box_feats_idx.unsqueeze(1).expand(-1,N,-1)
-            o_i = box_feats_idx.unsqueeze(0).expand(N,-1,-1)
+            o_i = box_feats_idx.unsqueeze(1).expand(-1,N,-1)
+            o_j = box_feats_idx.unsqueeze(0).expand(N,-1,-1)
             
             # dot product: (B, k, k)
             vtv = torch.mul(o_i.contiguous().view(N*N,-1) , o_j.contiguous().view(N*N,-1))
@@ -132,14 +136,20 @@ class RN(nn.Module):
             logit = logit.view(N,N,-1)
             
             
-#            idxmax = torch.max(score,dim=1)[1]
-##            scoremax =  torch.max(score,dim=1)[0]
+            idxmax = torch.max(score,dim=1)[1]
+            scoremax =  torch.max(score,dim=1)[0]       
+            index = torch.tensor(range(0,N)).unsqueeze(1).long()
+            index = index.to(self.device)
+            ii = torch.cat((index,idxmax),dim=1)                        
+            score_sel = score[ii[:,0],ii[:,1],:]
+            logit_sel = logit[ii[:,0],ii[:,1],:]
+                       
 #            scoresel = torch.gather(score,1,idxmax.unsqueeze(2)).squeeze(-1)
 #            logitsel = torch.gather(logit,1,idxmax.unsqueeze(2).repeat(1,1,2))
 #            logitsel = logitsel.squeeze(1)
             
-            logits.append(logit.unsqueeze(0))
-            scores.append(score.unsqueeze(0))
+            logits.append(logit_sel.unsqueeze(0))
+            scores.append(score_sel.unsqueeze(0))
         finscores = torch.cat(scores,0)
         finlogits = torch.cat(logits,0)
         return finscores,finlogits

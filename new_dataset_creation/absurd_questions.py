@@ -30,6 +30,7 @@ class AbsurdQuestionSimple:
         coco_id_ques_bbox = {}
         panop_catg_file_p = '../dataset/panoptic_categories.json'
         coco_labels = json.load(open(panop_catg_file_p))['things']['label']
+        del coco_labels['1']  # Delete the person label since it is the only child in supercategory
         things_tree, stuff_tree = generate_tree(panop_catg_file_p)
 
         for coco_img_id, stats in annotations.items():
@@ -55,9 +56,14 @@ class AbsurdQuestionSimple:
         neighbor_catg_names = set()
         # Get the sibling name of same parent
         for name in catg_names:
-            n_names = get_same_category_neighbor(name, things_tree)
-            if n_names != name:
-                neighbor_catg_names.add(n_names)
+            n_names = name
+            counter = 0
+            while n_names in catg_names:
+                n_names = get_same_category_neighbor(name, things_tree)
+                if counter >= 5:
+                    n_names = get_different_category_neighbor(name, things_tree)
+                counter += 1
+            neighbor_catg_names.add(n_names)
 
         for name in neighbor_catg_names:
             prefix_type1 = random.choice(self.prefix_type1)

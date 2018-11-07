@@ -22,7 +22,11 @@ if __name__ == '__main__':
 
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")        
-    loader_kwargs = {'num_workers': 0} if use_cuda else {}
+    loader_kwargs = {'num_workers': 6} if use_cuda else {}
+    eval_split = args.evalsplit 
+    if eval_split not in config.dataset[args.dataset]['splits']:
+        print ("{} split not found in [{}]!!".format(eval_split,args.dataset))
+        sys.exit(0)
     
     N_classes = 20 # xxx change this
     model = config.models.get(args.model,None)
@@ -59,12 +63,10 @@ if __name__ == '__main__':
     trainds = ReferDataset(split = 'train' ,istrain=True,**dskwargs)
     train_loader = DataLoader(trainds, batch_size=args.batch_size,
                          shuffle=True, **loader_kwargs)
-    test_loaders = []
-    for split in config.dataset[args.dataset]['splits']:    
-        testds = ReferDataset(split = split ,istrain=False,**dskwargs)
-        loader = DataLoader(testds, batch_size=args.batch_size,
+    
+    testds = ReferDataset(split = eval_split ,istrain=False,**dskwargs)
+    test_loader = DataLoader(testds, batch_size=args.batch_size,
                                  shuffle=False, **loader_kwargs)
-        test_loaders.append(loader)
 
     run_kwargs = {   **vars(args),
                      **config.global_config,
@@ -74,7 +76,7 @@ if __name__ == '__main__':
                      'device' : device, 
                      'model' :  model,
                      'train_loader': train_loader,
-                     'test_loader': test_loaders,
+                     'test_loader': test_loader,
                      'optimizer' : optimizer,
                      'logger':logger,                    
                   }

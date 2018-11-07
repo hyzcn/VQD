@@ -10,6 +10,7 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--epochs', type=int,help='Number of epochs',default=50)
     parser.add_argument('--model', help='Model Q | I| QI | Main | RN',default='RN')
+    parser.add_argument('--evalsplit', help='eval spolit',default='val')
     parser.add_argument('--lr', type=float,default=0.0003,help='Learning rate')
     parser.add_argument('--save', help='save folder name',default='0')
     parser.add_argument('--seed', type=int, default=1111, help='random seed')

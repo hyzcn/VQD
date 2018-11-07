@@ -39,7 +39,7 @@ def main(**kwargs):
         net.train()
         loader = kwargs.get('train_loader')
     else:
-        loader = kwargs.get('test_loader')[0]
+        loader = kwargs.get('test_loader')
         net.eval()
 
     clslossfn = nn.CrossEntropyLoss()

@@ -53,8 +53,8 @@ class ReferDataset(Dataset):
         self.spatial = True            
         self.image_features_path_coco = kwargs.get('coco_bottomup')
         self.coco_id_to_index =  self.id_to_index(self.image_features_path_coco)  
-        print ("[[Dataset {} loaded....]]".format(dataset,split))
-        print ("[Split {} has {} ref exps.]".format(split,len(self.data)))
+        print ("Dataset [{}] loaded....".format(dataset,split))
+        print ("Split [{}] has {} ref exps.".format(split,len(self.data)))
 
     def _process_boxes(self,bboxes,image_w,image_h):
             box_width = bboxes[:, 2] - bboxes[:, 0]
@@ -144,7 +144,7 @@ class ReferDataset(Dataset):
         
         tokens = tokenize_ques(self.dictionary,que)
         qfeat = torch.from_numpy(tokens).long()
-        return sent_id,ans,box_feats,box_coordsorig,box_coords_6d.float(),gtboxiou.float(),qfeat,L,idx
+        return sent_id,ans,box_feats,box_coordsorig,box_coords_6d.float(),gtboxorig.float(),qfeat,L,idx
 
 #%%
 if __name__ == "__main__":

@@ -49,12 +49,7 @@ def main(**kwargs):
         for i, data in enumerate(loader):
             sent_id,ans,box_feats,box_coordsorig,box_coords_6d,gtbox,qfeat,L,idx = data            
             idxs.extend(sent_id.tolist())        
-
             true.extend(gtbox.tolist())
-            
-            
-            
-    
             #normalize the box feats
             box_feats = F.normalize(box_feats,p=2,dim=-1)
             box_feats = box_feats.to(device)

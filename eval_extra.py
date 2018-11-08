@@ -78,6 +78,15 @@ def compute_overall(predictions):
 def convert_xywh_x1y1x2y2(box_coords):
     return torch.cat( (box_coords[:,0:2] , box_coords[:, 0:2] + box_coords[:, 2:4] - 1),dim=1)
 
+# box functions
+def xywh_to_xyxy(boxes):
+  """Convert [x y w h] box format to [x1 y1 x2 y2] format."""
+  return np.hstack((boxes[:, 0:2], boxes[:, 0:2] + boxes[:, 2:4] - 1))
+
+def xyxy_to_xywh(boxes):
+  """Convert [x1 y1 x2 y2] box format to [x y w h] format."""
+  return np.hstack((boxes[:, 0:2], boxes[:, 2:4] - boxes[:, 0:2] + 1))
+
 
 def get_precision_recall(pred_bb, gt_bb, IOUThreshold=0.5):
     """

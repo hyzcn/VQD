@@ -11,6 +11,7 @@ from opt import parse_args
 from data import ReferDataset
 import torch.nn as nn
 import torch.nn.functional as F
+from eval_extra import getIOU,convert_xywh_x1y1x2y2
 
 DIR = 'testboxes'
 if not os.path.exists(DIR):
@@ -26,8 +27,8 @@ def retbox(bbox,format='xyxy'):
         xmin, ymin, xmax, ymax = bbox
     elif format =='xywh':
         xmin, ymin, w, h = bbox
-        xmax = xmin + w
-        ymax = ymin + h       
+        xmax = xmin + w -1 
+        ymax = ymin + h -1      
     
     box =  np.array([[xmin, xmax, xmax, xmin, xmin],
                     [ymin, ymin, ymax, ymax, ymin]])
@@ -51,6 +52,16 @@ def saveimage(ent,boxes):
     scores = ent['scores']
     classify = ent['cls']
     clspred = ent['pred']
+    
+           
+    cocogtbox = torch.tensor(ent['gtbox'])
+    cocogtbox = convert_xywh_x1y1x2y2(cocogtbox.unsqueeze(0)).squeeze(0)
+    predbox = torch.tensor(boxes[clspred]).unsqueeze(0)
+    bottomupgtbox = torch.tensor(boxes[ansidx])
+    
+    iou_cocogt = getIOU(predbox,cocogtbox).item()
+    iou_bottomupgt= getIOU(predbox,bottomupgtbox).item()
+    
     for i in range(ent['L']):
        xmin,ymin,xmax,ymax  = boxes[i]
        x =[xmin,ymin,xmax,ymax]
@@ -79,6 +90,7 @@ def saveimage(ent,boxes):
     imglast = image.split("/")[-1]
     plt.title("Pred index: {} .. G = GT, K = COCOGT , R = pred".format(clspred))
     plt.xlabel("{}".format(question))
+    plt.ylabel("IOU COCO: {:.2f},BUP: {:.2f}".format(iou_cocogt,iou_bottomupgt))
     path = os.path.join(DIR,"ann_{}_{}".format(sent_id,imglast))
     plt.savefig(path,dpi=150)
     plt.close()
@@ -163,7 +175,7 @@ if __name__ == '__main__':
             print (scores,ent['cls'])              
             print ("correct box index: {}".format(idx))            
             print ("pred box index: {}".format(clspred))       
-            
+            print ("L: {}".format(ent['L']))  
                    
             saveimage(ent,box_coordsorig.tolist()[0])       
             feedback = input("Continue [N/n]?: ")

@@ -97,7 +97,7 @@ if __name__ == '__main__':
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")        
     loader_kwargs = {'num_workers': 0} if use_cuda else {}
-    
+    eval_split = args.evalsplit 
     N_classes = 20 # xxx change this
     model = config.models.get(args.model,None)
     if model is None:
@@ -121,14 +121,10 @@ if __name__ == '__main__':
     dskwargs = { 'testrun':args.testrun ,
                 **config.global_config, **config.dataset[args.dataset]}
     
-    test_loaders = []
-    for split in config.dataset[args.dataset]['splits']:    
-        testds = ReferDataset(split = split ,istrain=False,**dskwargs)
-        loader = DataLoader(testds, batch_size= 1 ,
+    testdset = ReferDataset(split = eval_split ,istrain=False,**dskwargs)
+    test_loader = DataLoader(testdset, batch_size= 1 ,
                                  shuffle=False, **loader_kwargs)
-        test_loaders.append(loader)
-
-    test_loader = test_loaders[0]          
+        
     testds = test_loader.dataset.data
     with torch.set_grad_enabled(False):
         for i,data in enumerate(test_loader):

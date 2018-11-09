@@ -137,6 +137,7 @@ class ReferDataset(Dataset):
         
         #boxes in h4files are in x1 y1 x2 y2 format
         iou = getIOU(gtboxorig.unsqueeze(0),torch.from_numpy(box_coordsorig))
+        correct = iou>0.5
         _,idx = torch.max(iou,dim=0)
 #        print (iou,iou.shape,box_coordsorig,"index",idx)
         gtboxiou = box_coordsorig[idx]
@@ -144,7 +145,7 @@ class ReferDataset(Dataset):
         
         tokens = tokenize_ques(self.dictionary,que)
         qfeat = torch.from_numpy(tokens).long()
-        return sent_id,ans,box_feats,box_coordsorig,box_coords_6d.float(),gtboxorig.float(),qfeat,L,idx
+        return sent_id,ans,box_feats,box_coordsorig,box_coords_6d.float(),gtboxorig.float(),qfeat,L,idx,correct.view(-1)
 
 #%%
 if __name__ == "__main__":
@@ -157,8 +158,9 @@ if __name__ == "__main__":
     dataloader_kwargs['split'] = 'val'
     cd = ReferDataset(**dataloader_kwargs)
     it = iter(cd)
+#%%
     data =  next(it)
     print (data)
-    sent_id,ans,box_feats,box_coordsorig,box_coords_6d,gtbox,qfeat,L,idx = data
+    sent_id,ans,box_feats,box_coordsorig,box_coords_6d,gtbox,qfeat,L,idx,correct = data
       
   

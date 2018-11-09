@@ -34,7 +34,7 @@ class RN(nn.Module):
 
         common_layers =   [nn.Linear(insize, LINsize),
                            nn.ReLU(inplace=True),
-                           nn.Dropout(0.5),
+                           #nn.Dropout(0.5),
                            nn.Linear(LINsize,LINsize)]
     
         self.fcommon = nn.Sequential(*common_layers) 

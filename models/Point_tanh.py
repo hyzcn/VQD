@@ -8,8 +8,6 @@ Created on Fri Aug 10 13:04:34 2018
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import numpy as np
 from .language import QuestionParser
 
 class RN(nn.Module):
@@ -20,7 +18,7 @@ class RN(nn.Module):
         Q_GRU_out = 1024
         Q_embedding = 300
         LINsize = 1024
-        Boxcoords = 16
+        Boxcoords = 6
 
         self.Ncls = 2 #either true to false 
         
@@ -32,17 +30,22 @@ class RN(nn.Module):
                                          rnn_type= 'GRU')
                
 
-        hidden = 512
-        insize = I_CNN + Q_GRU_out
-        self.W = nn.Linear(insize,hidden)
-        self.Wprime = nn.Linear(insize,hidden)        
-        self.fscore = nn.Linear(in_features=hidden,out_features=1,bias=False)      
-        fcls_layers =  [ nn.Linear( I_CNN + Q_GRU_out, LINsize),
+        insize = Boxcoords +  I_CNN + Q_GRU_out
+
+        common_layers =   [nn.Linear(insize, LINsize),
                            nn.ReLU(inplace=True),
                            #nn.Dropout(0.5),
-                           nn.Linear( LINsize, LINsize),
-                           nn.ReLU(inplace=True),
-                           #nn.Dropout(0.5),
+                           nn.Linear(LINsize,LINsize)]
+    
+        self.fcommon = nn.Sequential(*common_layers) 
+        
+        fscore_layers =  [ nn.ReLU(inplace=True),
+                           nn.Linear(LINsize,1)]
+        
+        
+        self.fscore = nn.Sequential(*fscore_layers) 
+
+        fcls_layers =  [   nn.ReLU(inplace=True),
                            nn.Linear(LINsize,self.Ncls)]
 
         self.fcls = nn.Sequential(*fcls_layers) 
@@ -53,13 +56,15 @@ class RN(nn.Module):
         b,d,k = box_feats.size()
         qst  =  q_rnn.unsqueeze(1)
         qst = qst.repeat(1, d, 1)        
-        b_full = torch.cat([box_feats,qst],-1)            
-        #gated tanh function
-        y_tilde = torch.tanh(self.W(b_full))
-        g = torch.sigmoid(self.Wprime(b_full))
-        si = torch.mul(y_tilde, g)# gating   
-        scores = torch.sigmoid(self.fscore(si))
-        logits =  self.fcls(b_full) 
-        return  scores,logits
+        b_full = torch.cat([box_feats,qst,box_coords],-1)            
+        common = self.fcommon(b_full)
+        scores = self.fscore(common)
+        scores_tanh = torch.tanh(scores)
+        # dont know why clone is needed here
+        #backward was shgowing some error
+        logits =  self.fcls(common.clone()) 
+        return  scores_tanh,logits
+
+
 
 

@@ -49,7 +49,7 @@ class RN(nn.Module):
 
         self.fcls = nn.Sequential(*fcls_layers) 
 
-    def forward(self,box_feats,q_feats,box_coords):
+    def forward(self,box_feats,q_feats,box_coords,index):
 
         q_rnn  = self.QRNN(q_feats)
         b,d,k = box_feats.size()

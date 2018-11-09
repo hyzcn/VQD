@@ -136,10 +136,10 @@ class RN(nn.Module):
             logit = logit.view(N,N,-1)
             
             
-            idxmax = torch.max(score,dim=1)[1]
-            scoremax =  torch.max(score,dim=1)[0]       
+            scoremax,idxmax = torch.max(score.cpu(),dim=1)    
             index = torch.tensor(range(0,N)).unsqueeze(1).long()
             index = index.to(self.device)
+            idxmax = idxmax.to(self.device)
             ii = torch.cat((index,idxmax),dim=1)                        
             score_sel = score[ii[:,0],ii[:,1],:]
             logit_sel = logit[ii[:,0],ii[:,1],:]

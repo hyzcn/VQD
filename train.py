@@ -47,7 +47,7 @@ def main(**kwargs):
     
     with torch.set_grad_enabled(istrain):
         for i, data in enumerate(loader):
-            sent_id,ans,box_feats,box_coordsorig,box_coords_6d,gtbox,qfeat,L,idx = data            
+            sent_id,ans,box_feats,box_coordsorig,box_coords_6d,gtbox,qfeat,L,idx,correct = data            
             idxs.extend(sent_id.tolist())        
             true.extend(gtbox.tolist())
             #normalize the box feats
@@ -69,10 +69,7 @@ def main(**kwargs):
             scores,logits = net(**net_kwargs)            
             logits = logits.view(B*Nbox,-1)
             
-            ii = torch.cat( (torch.tensor(range(0,B)).unsqueeze(1).long(),idx),dim=1)            
-            idx_expand = torch.zeros((B,Nbox))
-            idx_expand[ii[:,0].long(),ii[:,1].long()] = 1
-            idx_expand = idx_expand.view(-1)
+            idx_expand = correct.view(-1)
             idx_expand = idx_expand.to(device)                       
             loss_cc = clslossfn(logits.view(B*Nbox,-1), idx_expand.long())
             

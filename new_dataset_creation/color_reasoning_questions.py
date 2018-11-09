@@ -1,6 +1,7 @@
 import re
 import random
 from utils import *
+from object_names_vis_genome import *
 
 
 class ColorReasoningQues:
@@ -40,7 +41,7 @@ class ColorReasoningQues:
         """
         for sent, bboxes in obj_color_keywords_to_bboxes.items():
             for bbox in bboxes:
-                if not bb_iou(new_bbox, bbox):
+                if not bb_iou(new_bbox, bbox, 0.5):
                     return False
         return True
 
@@ -110,6 +111,7 @@ class ColorReasoningQues:
         vis_id_ques_bbox = dict()
         coco_labels = get_coco_labels()
         vis_image_annt_dict = json.load(open('../dataset/vis_image_annt.json'))
+        predefined_objects = set(list(coco_labels) + list(freq_obj_names))
 
         for attr_dict in attrib_list:
             vis_image_id = attr_dict['image_id']
@@ -121,27 +123,42 @@ class ColorReasoningQues:
                 if 'names' in a and 'attributes' in a:
                     obj_names = a['names']
                     attr_names = a['attributes']
+                    synsets = a['synsets']
+                    sent = None
                     attr_names = [re.sub('\W+', '', attr).lower() for attr in attr_names]
-                    for obj in obj_names:
+                    if len(synsets) == 1:
                         for attr in attr_names:
-                            if attr in self.color and obj in coco_labels:
-                                sent = obj + ' ' + attr
-                                # if another (obj, attr) pair sentences finds in annotations then there
-                                # is more than one object present of same category
-                                if sent in obj_color_keywords_to_bboxes:
-                                    x, y, w, h = a['x'], a['y'], a['w'], a['h']
-                                    existing_bboxes = obj_color_keywords_to_bboxes[sent]
-                                    to_add = True
-                                    for bbox in existing_bboxes:
-                                        if not bb_iou(bbox, [x, y, w, h]):
-                                            to_add = False
+                            if attr in self.color and len(obj_names) >= 1 and \
+                                    obj_names[0] in predefined_objects:
+                                sent = obj_names[0] + ' ' + attr
+                                break
+                    elif len(synsets) > 1:
+                        for attr in attr_names:
+                            if attr in self.color and len(obj_names) >= 1:
+                                obj_name = obj_names[0]
+                                for color in self.color:
+                                    if color in obj_name:
+                                        attr = ''
+                                sent = obj_name + ' ' + attr
+                                break
 
-                                    if to_add:
-                                        obj_color_keywords_to_bboxes[sent].append([x, y, w, h])
-                                else:
-                                    x, y, w, h = a['x'], a['y'], a['w'], a['h']
-                                    if self.check_redundant_bbox([x, y, w, h], obj_color_keywords_to_bboxes):
-                                        obj_color_keywords_to_bboxes[sent] = [[x, y, w, h]]
+                    if sent is not None:
+                        # if another (obj, attr) pair sentences finds in annotations then there
+                        # is more than one object present of same category
+                        if sent in obj_color_keywords_to_bboxes:
+                            x, y, w, h = a['x'], a['y'], a['w'], a['h']
+                            existing_bboxes = obj_color_keywords_to_bboxes[sent]
+                            to_add = True
+                            for bbox in existing_bboxes:
+                                if not bb_iou(bbox, [x, y, w, h], 0.5):
+                                    to_add = False
+
+                            if to_add:
+                                obj_color_keywords_to_bboxes[sent].append([x, y, w, h])
+                        else:
+                            x, y, w, h = a['x'], a['y'], a['w'], a['h']
+                            if self.check_redundant_bbox([x, y, w, h], obj_color_keywords_to_bboxes):
+                                obj_color_keywords_to_bboxes[sent] = [[x, y, w, h]]
 
             # Transform the (object, color) name pair to a question
             all_ques_to_bboxes_per_image = self.ques_to_bboxes_per_image(obj_color_keywords_to_bboxes)

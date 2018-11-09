@@ -92,7 +92,8 @@ def saveimage(ent,boxes):
     plt.xlabel("{}".format(question))
     plt.ylabel("IOU COCO: {:.2f},BUP: {:.2f}".format(iou_cocogt,iou_bottomupgt))
     path = os.path.join(DIR,"ann_{}_{}".format(sent_id,imglast))
-    plt.savefig(path,dpi=150)
+    if iou_cocogt <0.5:
+        plt.savefig(path,dpi=150)
     plt.close()
 
 
@@ -178,10 +179,10 @@ if __name__ == '__main__':
             print ("L: {}".format(ent['L']))  
                    
             saveimage(ent,box_coordsorig.tolist()[0])       
-            feedback = input("Continue [N/n]?: ")
-            if feedback in ['N','n']:
-                print ("Done....")
-                sys.exit(0)
+#            feedback = input("Continue [N/n]?: ")
+#            if feedback in ['N','n']:
+#                print ("Done....")
+#                sys.exit(0)
            
 
 

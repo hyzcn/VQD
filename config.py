@@ -8,6 +8,7 @@ global_config['coco_pool_features'] = '/hdd/manoj/IMGFEATS/resnet152.h5'
 global_config['genome_pool_features'] = '/hdd/manoj/IMGFEATS/resnet152_genome.h5'
 global_config['coco_bottomup'] = '/home/manoj/bottomup_1_100/ssd/genome-trainval.h5'
 global_config['genome_bottomup'] = '/home/manoj/bottomup_1_100/ssd/genome_ourdb/genome-trainval.h5'
+global_config['refcoco_frcnn'] = '/home/manoj/reffeats/refcoco_unc_det_feats.h5'
 
 
 #dictionary

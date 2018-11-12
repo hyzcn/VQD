@@ -22,7 +22,7 @@ if __name__ == '__main__':
 
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")        
-    loader_kwargs = {'num_workers': 6} if use_cuda else {}
+    loader_kwargs = {'num_workers': args.workers} if use_cuda else {}
     eval_split = args.evalsplit 
     if eval_split not in config.dataset[args.dataset]['splits']:
         print ("{} split not found in [{}]!!".format(eval_split,args.dataset))

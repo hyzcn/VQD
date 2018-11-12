@@ -42,7 +42,7 @@ def main(**kwargs):
         loader = kwargs.get('test_loader')
         net.eval()
 
-    clslossfn = nn.CrossEntropyLoss()
+    clslossfn = nn.CrossEntropyLoss(reduction='none')
     mmloss = nn.MultiMarginLoss()
     
     with torch.set_grad_enabled(istrain):
@@ -70,11 +70,25 @@ def main(**kwargs):
             logits = logits.view(B*Nbox,-1)
             
             idx_expand = correct.view(-1)
-            idx_expand = idx_expand.to(device)                       
-            loss_cc = clslossfn(logits.view(B*Nbox,-1), idx_expand.long())
+            idx_expand = idx_expand.to(device)                   
+            loss_cc_allbox = clslossfn(logits.view(B*Nbox,-1), idx_expand.long())            
+            loss_cc_allbox = loss_cc_allbox[ L.view(-1) == 1]
+            len_true_box = L.sum().item()
+            loss_cc = torch.sum( loss_cc_allbox)/len_true_box
             
-            scores = scores.squeeze()          
-            loss_margin = mmloss(scores,idx.to(device).squeeze())           
+            
+            scores = scores.squeeze()    
+            # TODO: will this affect the gradients in any way
+            #should we directly add to data             
+            L = L.to(device)           
+            scores_idx = torch.cat( (torch.tensor(range(0,B)).unsqueeze(1).long(),idx.long()),dim=1)
+            scores_det = scores.detach()
+            gt_scores = scores_det[scores_idx[:,0],scores_idx[:,1]].unsqueeze(1)
+            ignore_index_scores = torch.mul(gt_scores,(L==0).float())            
+            scores_det  =  ignore_index_scores + torch.mul(scores_det,L.float())
+
+            
+            loss_margin = mmloss(scores,idx.to(device).squeeze()) 
             loss = loss_cc + loss_margin           
             _,clspred = torch.max(scores,-1)
             

@@ -24,7 +24,7 @@ if __name__ == "__main__":
     idxs = []
 
     for i,data in enumerate(tqdm(loader)):
-        sent_id,ans,box_feats,box_coordsorig,box_coords_6d,gtbox,qfeat,L,idx = data 
+        sent_id,ans,box_feats,box_coordsorig,box_coords_6d,gtbox,qfeat,L,idx,correct = data
         idxs.extend(sent_id.tolist())        
         true.extend(gtbox.tolist())  
         B = len(box_coordsorig)               
@@ -36,12 +36,50 @@ if __name__ == "__main__":
     traingt = torch.tensor(true)
     trainpred = torch.tensor(pred)
     trainacc = eval_extra.getaccuracy(traingt,trainpred)
-    print("\tAccuracy {:.2f}%".format(trainacc))
+    print("\nAccuracy using bottomup {:.2f}%".format(trainacc))
     
-    
-#%%
 """
 Only 91.13%  of the actual COCO gt is present in the bottomup 
 features.
 
 """    
+
+#%%
+
+import json
+from collections import defaultdict
+js = json.load(open('/media/manoj/hdd/VQD/MAttNet/detections/refcocog_umd/res101_coco_minus_refer_notime_dets.json'))
+
+qid2ent = defaultdict(list)
+for ent in js:
+    qid2ent[ent['image_id']].append(ent)
+print ("total detections",len(qid2ent))
+for kid in qid2ent:
+    print (kid,len(qid2ent[kid]))
+    
+    
+#%%
+    
+    # box functions
+def xywh_to_xyxy(boxes):
+  """Convert [x y w h] box format to [x1 y1 x2 y2] format."""
+  return np.hstack((boxes[:, 0:2], boxes[:, 0:2] + boxes[:, 2:4] - 1))
+
+def xyxy_to_xywh(boxes):
+  """Convert [x1 y1 x2 y2] box format to [x y w h] format."""
+  return np.hstack((boxes[:, 0:2], boxes[:, 2:4] - boxes[:, 0:2] + 1))
+
+acc = 0
+L = len(testds.data)
+for ent in testds.data:
+    imgid = ent['image_id']
+    gtbox_xywh = np.array([ent['gtbox']])
+    boxes_xywh = np.array([ b['box'] for b in qid2ent[imgid]])    
+    gtbox_xyxy = torch.from_numpy(xywh_to_xyxy(gtbox_xywh))
+    boxes_xyxy = torch.from_numpy(xywh_to_xyxy(boxes_xywh))
+    ious = eval_extra.getIOU(gtbox_xyxy,boxes_xyxy)> 0.5
+    iou = ious.sum().item()
+    if iou>=1:
+        acc +=1.0
+
+print("\nAccuracy using Mattnet Boxes {:.2f}%".format(100*acc/L))   

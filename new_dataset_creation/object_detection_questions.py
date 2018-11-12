@@ -10,10 +10,8 @@ class ObjectDetectionQues:
 
     def __init__(self):
         self.prefix_type1 = ["Show the", "Show me the"]
-        self.prefix_type2 = ["Where is the", "Where are the"]
-        self.prefix_type3 = ["Is there a", "Is there any"]
+        self.prefix_type2 = ["Where is the"]
         self.suffix = [None, "in the image", "in the picture"]
-        self.plural = load_plural()
 
     def ques_and_bbox(self, annotations, num_ques_per_image):
         """
@@ -47,17 +45,9 @@ class ObjectDetectionQues:
         """
         all_ques_to_bboxes_per_image = dict()
         for name, bbox in catg_name_to_bbox.items():
-            if len(bbox) > 1:
-                # Get the plural name if more than one bounding boxes
-                name = self.plural[name]
-                prefix_type2 = self.prefix_type2[1]
-                prefix_type3 = self.prefix_type3[1]
-
-            else:
-                prefix_type2 = self.prefix_type2[0]
-                prefix_type3 = self.prefix_type3[0]
+            prefix_type2 = self.prefix_type2[0]
             prefix_type1 = random.choice(self.prefix_type1)
-            prefix_types = {prefix_type1, prefix_type2, prefix_type3}
+            prefix_types = {prefix_type1, prefix_type2}
 
             prefix = random.sample(prefix_types, 1)[0]
             suffix = random.choice(self.suffix)

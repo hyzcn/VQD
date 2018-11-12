@@ -18,7 +18,6 @@ class ColorReasoningQues:
         self.middle_type2 = ["is", "are"]
         self.suffix = ["in color"]
         self.eos = ['', '?']
-        self.plural = load_plural()  # mapping of singular to plural words
         self.color = self.get_color()  # set of color names
 
     def get_color(self):
@@ -56,30 +55,13 @@ class ColorReasoningQues:
         for keywords, bboxes in obj_color_keywords_to_bboxes.items():
             # split the objects name and color name
             obj_name, color_name = keywords.rsplit(" ", 1)
-
-            # Length of bounding boxes determine whether the question is singular
-            # or plural
-            if len(bboxes) > 1:
-                try:
-                    obj_name = self.plural[obj_name]
-                except KeyError:
-                    obj_name = obj_name
-                prefix = random.choice(self.prefix)
-                if prefix.startswith("Show"):
-                    middle = self.middle_type1[1]
-                    eos = self.eos[0]
-                else:
-                    middle = self.middle_type2[1]
-                    eos = self.eos[1]
-
+            prefix = random.choice(self.prefix)
+            if prefix.startswith("Show"):
+                middle = self.middle_type1[0]
+                eos = self.eos[0]
             else:
-                prefix = random.choice(self.prefix)
-                if prefix.startswith("Show"):
-                    middle = self.middle_type1[0]
-                    eos = self.eos[0]
-                else:
-                    middle = self.middle_type2[0]
-                    eos = self.eos[1]
+                middle = self.middle_type2[0]
+                eos = self.eos[1]
 
             # Construct a question
             question = prefix + ' ' + obj_name + ' ' + middle + ' ' \

@@ -9,21 +9,6 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 
-def load_plural():
-    """
-    It load singular and plural words
-    :return: Dictionary representing key as singular word and
-    value as plural word
-    """
-    filename = '../dataset/plural.txt'
-    result = {}
-    with open(filename, 'r') as fp:
-        for line in fp:
-            names = line.strip().split(": ")
-            result[names[0]] = names[1]
-    return result
-
-
 def get_coco_labels():
     """
     It extracts all the coco labels(things and stuff)

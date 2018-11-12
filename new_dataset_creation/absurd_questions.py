@@ -16,7 +16,6 @@ class AbsurdQuestionSimple:
         """
         self.prefix_type1 = ["Show the", "Show me the"]
         self.prefix_type2 = ["Where is the"]
-        self.prefix_type3 = ["Is there a"]
         self.suffix = [None, "in the image", "in the picture"]
 
     def ques_and_bbox(self, annotations, num_ques_per_image):
@@ -68,8 +67,7 @@ class AbsurdQuestionSimple:
         for name in neighbor_catg_names:
             prefix_type1 = random.choice(self.prefix_type1)
             prefix_type2 = self.prefix_type2[0]
-            prefix_type3 = self.prefix_type3[0]
-            prefix_types = {prefix_type1, prefix_type2, prefix_type3}
+            prefix_types = {prefix_type1, prefix_type2}
 
             prefix = random.sample(prefix_types, 1)[0]
             suffix = random.choice(self.suffix)

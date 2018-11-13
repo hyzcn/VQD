@@ -5,7 +5,6 @@ mkdir dataset/
 # Panoptic annotations
 wget http://images.cocodataset.org/annotations/panoptic_annotations_trainval2017.zip
 unzip panoptic_annotations_trainval2017.zip -d dataset/
-rm -rf dataset/annotations/
 mv dataset/annotations/panoptic_*.json dataset/
 
 

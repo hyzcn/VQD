@@ -111,7 +111,7 @@ class PositionReasoningQues:
         """
         coco_id_ques_bbox = dict()
         vis_id_ques_bbox = dict()
-        vis_image_annt_dict = json.load(open('../dataset/vis_image_annt.json'))
+        vis_image_annt_dict = json.load(open('dataset/vis_image_annt.json'))
 
         for i, rel_dict in enumerate(relation_list):
             sentence_keywords_to_bboxes = dict()
@@ -171,7 +171,7 @@ if __name__ == '__main__':
     json file
     :return: None
     """
-    relationship_path = '../dataset/relationships.json'
+    relationship_path = 'dataset/relationships.json'
     relation_list = json.load(open(relationship_path))
     num_ques_per_image = 2
     prq = PositionReasoningQues()

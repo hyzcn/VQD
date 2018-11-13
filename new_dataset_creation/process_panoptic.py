@@ -16,7 +16,7 @@ def create_category_json(train_f):
     stuff_label = dict()  # To store COCO stuff labels as {id:name}
     t_tree = []  # list of CHILD:PARENT name for things
     s_tree = []  # list of CHILD:PARENT name for stuff
-    dest_file_path = '../dataset/panoptic_categories.json'
+    dest_file_path = 'dataset/panoptic_categories.json'
 
     categories = json.load(open(train_f))['categories']
     for categ in categories:
@@ -74,7 +74,7 @@ def create_image_json(train_f, val_f):
     """
     js_train = json.load(open(train_f))
     js_val = json.load(open(val_f))
-    dest_file_path = '../dataset/panoptic_images.json'
+    dest_file_path = 'dataset/panoptic_images.json'
 
     result = {}
     img_train = js_train['images']
@@ -109,7 +109,7 @@ def create_annotations_json(train_f, val_f):
     """
     js_train = json.load(open(train_f))
     js_val = json.load(open(val_f))
-    dest_file_path = '../dataset/panoptic_annotations.json'
+    dest_file_path = 'dataset/panoptic_annotations.json'
 
     result = {}
     ann_train = js_train['annotations']
@@ -133,8 +133,8 @@ def create_annotations_json(train_f, val_f):
 
 
 if __name__ == '__main__':
-    train_f = '../dataset/panoptic_train2017.json'
-    val_f = '../dataset/panoptic_val2017.json'
+    train_f = 'dataset/panoptic_train2017.json'
+    val_f = 'dataset/panoptic_val2017.json'
     create_category_json(train_f)
     create_image_json(train_f, val_f)
     create_annotations_json(train_f, val_f)

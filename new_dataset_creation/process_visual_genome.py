@@ -10,14 +10,14 @@ def create_image_annot_json():
     :param filepath: A image_data.json file path
     :return: None
     """
-    filepath = '../dataset/image_data.json'
+    filepath = 'dataset/image_data.json'
     img_list = json.load(open(filepath))
     result = dict()
     for img in img_list:
         vis_id = img['image_id']
         result[vis_id] = img
 
-    dest_file_path = '../dataset/vis_image_annt.json'
+    dest_file_path = 'dataset/vis_image_annt.json'
     with open(dest_file_path, 'w') as fp:
         json.dump(result, fp)
     print("DONE! - Generated " + dest_file_path)

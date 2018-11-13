@@ -22,7 +22,7 @@ class ObjectDetectionQues:
         :return: dict of questions to bounding boxes
         """
         coco_id_ques_bbox = {}
-        panop_catg_file_p = '../dataset/panoptic_categories.json'
+        panop_catg_file_p = 'dataset/panoptic_categories.json'
         coco_labels = json.load(open(panop_catg_file_p))['things']['label']
 
         for coco_img_id, stats in annotations.items():
@@ -82,7 +82,7 @@ def main():
     json file
     :return: None
     """
-    panop_ann_file_p = '../dataset/panoptic_annotations.json'
+    panop_ann_file_p = 'dataset/panoptic_annotations.json'
     annotations = json.load(open(panop_ann_file_p))['annotations']
     odq = ObjectDetectionQues()
     num_ques_per_image = 2

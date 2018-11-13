@@ -92,7 +92,7 @@ class ColorReasoningQues:
         coco_id_ques_bbox = dict()
         vis_id_ques_bbox = dict()
         coco_labels = get_coco_labels()
-        vis_image_annt_dict = json.load(open('../dataset/vis_image_annt.json'))
+        vis_image_annt_dict = json.load(open('dataset/vis_image_annt.json'))
         predefined_objects = set(list(coco_labels) + list(freq_obj_names))
 
         for attr_dict in attrib_list:
@@ -177,7 +177,7 @@ def main():
     json file
     :return: None
     """
-    attrib_filename = '../dataset/attributes.json'
+    attrib_filename = 'dataset/attributes.json'
     attrib_list = json.load(open(attrib_filename))
     num_ques_per_image = 2
     crq = ColorReasoningQues()

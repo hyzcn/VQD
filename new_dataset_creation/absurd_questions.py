@@ -27,7 +27,7 @@ class AbsurdQuestionSimple:
         :return: dict of questions to empty bounding boxes
         """
         coco_id_ques_bbox = {}
-        panop_catg_file_p = '../dataset/panoptic_categories.json'
+        panop_catg_file_p = 'dataset/panoptic_categories.json'
         coco_labels = json.load(open(panop_catg_file_p))['things']['label']
         del coco_labels['1']  # Delete the person label since it is the only child in supercategory
         things_tree, stuff_tree = generate_tree(panop_catg_file_p)
@@ -175,11 +175,11 @@ class AbsurdQuestionColor:
         """
         coco_id_ques_bbox = dict()
         vis_id_ques_bbox = dict()
-        vis_image_annt_dict = json.load(open('../dataset/vis_image_annt.json'))
+        vis_image_annt_dict = json.load(open('dataset/vis_image_annt.json'))
 
         # Generate a MS-COCO things label tree structure for getting a different
         # label
-        panop_catg_file_p = '../dataset/panoptic_categories.json'
+        panop_catg_file_p = 'dataset/panoptic_categories.json'
         things_tree, stuff_tree = generate_tree(panop_catg_file_p)
         categories = json.load(open(panop_catg_file_p))
         coco_labels = categories['things']['label'].values()
@@ -234,14 +234,14 @@ def main():
     json file
     :return: None
     """
-    panop_ann_file_p = '../dataset/panoptic_annotations.json'
+    panop_ann_file_p = 'dataset/panoptic_annotations.json'
     annotations = json.load(open(panop_ann_file_p))['annotations']
     num_ques_per_image = 2
     aqs = AbsurdQuestionSimple()
     coco_id_to_ques_bbox = aqs.ques_and_bbox(annotations, num_ques_per_image)
     write_to_file(coco_id_to_ques_bbox, 'simple')
 
-    visual_genome_attrib_file_p = '../dataset/attributes.json'
+    visual_genome_attrib_file_p = 'dataset/attributes.json'
     attrib_list = json.load(open(visual_genome_attrib_file_p))
     num_ques_per_image = 2
     aqc = AbsurdQuestionColor()

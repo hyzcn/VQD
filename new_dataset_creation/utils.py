@@ -14,7 +14,7 @@ def get_coco_labels():
     It extracts all the coco labels(things and stuff)
     :return: A set of coco labels
     """
-    panop_catg_file_path = '../dataset/panoptic_categories.json'
+    panop_catg_file_path = 'dataset/panoptic_categories.json'
     categories = json.load(open(panop_catg_file_path))
     coco_thing_label = list(categories['things']['label'].values())
     coco_stuff_label = list(categories['stuff']['label'].values())
@@ -34,7 +34,7 @@ def transform_vis_bbox_to_coco_bbox(coco_id_ques_dict):
     :return: Dictionary with transformed bounding boxes
     """
     new_coco_id_ques_dict = dict()
-    panoptic_coco_image_dict = json.load(open('../dataset/panoptic_images.json'))['images']
+    panoptic_coco_image_dict = json.load(open('dataset/panoptic_images.json'))['images']
     for coco_id, stats in coco_id_ques_dict.items():
         image_stats = panoptic_coco_image_dict[str(coco_id)]
 
@@ -210,7 +210,7 @@ def show_n_images(n):
     :param n: Number of images to display
     :return: None
     """
-    output_file = '../dataset/vqd_annotations.json'
+    output_file = 'dataset/vqd_annotations.json'
     output = json.load(open(output_file))
     annotations = output['annotations']
     annt_list = list(annotations.keys())
@@ -236,7 +236,7 @@ def create_fresh_file(output_file):
     :param output_file: VQD annotation file path
     :return: None
     """
-    images = json.load(open('../dataset/panoptic_images.json'))['images']
+    images = json.load(open('dataset/panoptic_images.json'))['images']
     output = dict()
     output['annotations'] = dict()
 
@@ -267,7 +267,7 @@ def save_coco_image_annotations(output_file):
     :param output_file: VQD annotation file path
     :return: None
     """
-    coco_images = json.load(open('../dataset/panoptic_images.json'))['images']
+    coco_images = json.load(open('dataset/panoptic_images.json'))['images']
     vqd = json.load(open(output_file))
     vqd_annotations = vqd['annotations']
 
@@ -291,7 +291,7 @@ def save_visual_genome_coco_annotations(output_file):
     :param output_file: VQD annotation file path
     :return: None
     """
-    vis_gen_images = json.load(open('../dataset/vis_image_annt.json'))
+    vis_gen_images = json.load(open('dataset/vis_image_annt.json'))
     vqd = json.load(open(output_file))
     vqd_annotations = vqd['annotations']
 
@@ -316,7 +316,7 @@ def write_to_file(coco_id_to_questions_dict, question_type):
             image id with list of questions and their respective bounding boxes
     :return: None
     """
-    output_file = '../dataset/vqd_annotations.json'
+    output_file = 'dataset/vqd_annotations.json'
 
     # Check if output file path exist
     exist = os.path.isfile(output_file)

@@ -1,5 +1,5 @@
 import json
-
+import os
 
 def question_tokenize(questions_bbox):
     """
@@ -49,7 +49,7 @@ def main():
     It generates a final VQD json file
     :return: None
     """
-    file_name = '../dataset/vqd_annotations.json'
+    file_name = 'dataset/vqd_annotations.json'
     vqd = json.load(open(file_name))
     annotations = vqd['annotations']
 
@@ -107,9 +107,12 @@ def main():
     val_vqd_json['Annotations'] = val_annotations
     val_vqd_json['Question_id'] = idx2question
 
+
     # Write to a file
-    train_vqd_file_path = '../dataset/vqd_train.json'
-    val_vqd_file_path = '../dataset/vqd_val.json'
+    if not os.path.exists("VQD"):
+        os.mkdir("VQD")    
+    train_vqd_file_path = 'VQD/vqd_train.json'
+    val_vqd_file_path = 'VQD/vqd_val.json'
     with open(train_vqd_file_path, 'w') as fp:
         json.dump(train_vqd_json, fp)
     with open(val_vqd_file_path, 'w') as fp:

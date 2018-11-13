@@ -2,7 +2,7 @@
 
 # Run the `dataset/download.sh` file to download all
 # the annotations required to construct a VQD dataset.
-#sh download.sh
+sh download.sh
 
 # `process_panoptic.py`to segregate the panoptic image, annotation,
 # and category which helps in processing the meta data faster.

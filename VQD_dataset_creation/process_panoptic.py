@@ -29,15 +29,23 @@ def create_category_json(train_f):
             stuff_label[categ['id']] = categ['name']
             s_tree.append(categ['name'] + ":" + categ['supercategory'])
 
-    things_outdoor_scatg = ['sports', 'accessory', 'animal', 'outdoor', 'vehicle', 'person']
-    things_indoor_scatg = ['indoor', 'appliance', 'electronic', 'furniture', 'food', 'kitchen']
-    stuff_outdoor_scatg = ['water', 'ground', 'solid', 'sky', 'plant', 'structural', 'building']
-    stuff_indoor_scatg = ['food', 'textile', 'furniture', 'window', 'floor', 'ceiling', 'wall', 'rawmaterial']
+    things_outdoor_scatg = ['sports', 'accessory', 'animal', 'outdoor',
+                            'vehicle', 'person']
+    things_indoor_scatg = ['indoor', 'appliance', 'electronic', 'furniture',
+                           'food', 'kitchen']
+    stuff_outdoor_scatg = ['water', 'ground', 'solid', 'sky', 'plant',
+                           'structural', 'building']
+    stuff_indoor_scatg = ['food', 'textile', 'furniture', 'window', 'floor',
+                          'ceiling', 'wall', 'rawmaterial']
 
-    things_outdoor = [child_name + ':OUTDOOR' for child_name in things_outdoor_scatg]
-    things_indoor = [child_name + ':INDOOR' for child_name in things_indoor_scatg]
-    stuff_outdoor = [child_name + ':OUTDOOR' for child_name in stuff_outdoor_scatg]
-    stuff_indoor = [child_name + ':INDOOR' for child_name in stuff_indoor_scatg]
+    things_outdoor = [child_name + ':OUTDOOR'
+                      for child_name in things_outdoor_scatg]
+    things_indoor = [child_name + ':INDOOR'
+                     for child_name in things_indoor_scatg]
+    stuff_outdoor = [child_name + ':OUTDOOR'
+                     for child_name in stuff_outdoor_scatg]
+    stuff_indoor = [child_name + ':INDOOR'
+                    for child_name in stuff_indoor_scatg]
 
     # Create a CHILD:PARENT mapping which will be useful in constructing
     # a level-wise tree

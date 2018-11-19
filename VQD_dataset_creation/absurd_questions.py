@@ -29,7 +29,8 @@ class AbsurdQuestionSimple:
         coco_id_ques_bbox = {}
         panop_catg_file_p = 'dataset/panoptic_categories.json'
         coco_labels = json.load(open(panop_catg_file_p))['things']['label']
-        del coco_labels['1']  # Delete the person label since it is the only child in supercategory
+        # Delete the person label since it is the only child in supercategory
+        del coco_labels['1']
         things_tree, stuff_tree = generate_tree(panop_catg_file_p)
 
         for coco_img_id, stats in annotations.items():
@@ -37,12 +38,16 @@ class AbsurdQuestionSimple:
             if len(catg_names) == 0:
                 questions_dict = dict()
             else:
-                questions_dict = self.ques_to_bboxes_per_image(catg_names, things_tree, num_ques_per_image)
+                questions_dict = self.ques_to_bboxes_per_image(catg_names,
+                                                               things_tree,
+                                                               num_ques_per_image)
 
-            coco_id_ques_bbox[str(coco_img_id)] = {'question_bbox': questions_dict}
+            coco_id_ques_bbox[str(coco_img_id)] = {
+                'question_bbox': questions_dict}
         return coco_id_ques_bbox
 
-    def ques_to_bboxes_per_image(self, catg_names, things_tree, num_ques_per_image):
+    def ques_to_bboxes_per_image(self, catg_names, things_tree,
+                                 num_ques_per_image):
         """
         Generates a mapping of questions to empty bounding boxes for a single
         MS-COCO image
@@ -88,7 +93,8 @@ class AbsurdQuestionSimple:
         limit_quest_to_bbox_per_image = {}
         for question in all_ques_to_bboxes_per_image:
             if num_ques_per_image > 0:
-                limit_quest_to_bbox_per_image[question] = all_ques_to_bboxes_per_image[question]
+                limit_quest_to_bbox_per_image[question] = \
+                all_ques_to_bboxes_per_image[question]
                 num_ques_per_image -= 1
         return limit_quest_to_bbox_per_image
 
@@ -135,7 +141,8 @@ class AbsurdQuestionColor:
         """
         It forms a questions based on object and color word and then
         it generates a set of questions to an empty bounding boxes
-        :param obj_color_keywords_to_bboxes: Object-color word to empty bounding boxes
+        :param obj_color_keywords_to_bboxes: Object-color word to empty
+                                             bounding boxes
         :return: Dictionary of questions to empty bounding boxes
         """
         all_ques_to_bboxes_per_image = dict()
@@ -158,14 +165,19 @@ class AbsurdQuestionColor:
     def ques_and_bbox(self, attrib_list, num_ques_per_image):
         """
         It generates a tuple of coco images which is a part of visual genome and
-        the rest of visual genome dataset containing set of question to bounding boxes.
+        the rest of visual genome dataset containing set of question to
+        bounding boxes.
         Steps:
             1. Iterate through every visual genome image annotations
-            2. Get the object names which is present in coco labels and color names
-            3. Get the different object and color name which is not present in the image
-            4. Form the pair of (object_names, color_names) to empty bounding boxes
+            2. Get the object names which is present in coco labels and
+               color names
+            3. Get the different object and color name which is not present
+               in the image
+            4. Form the pair of (object_names, color_names) to empty bounding
+               boxes
             5. Convert pairs of (object_names, color_names) to questions
-            6. Limit the (question, bounding boxes) pair to variable `num_of_ques`
+            6. Limit the (question, bounding boxes) pair to variable
+               `num_of_ques`
             7. store the limited (question, bounding boxes) pair
             8. Jump to step-1 and continue till the end
 
@@ -193,38 +205,43 @@ class AbsurdQuestionColor:
                 if 'names' in a and 'attributes' in a:
                     obj_names = a['names']
                     attr_names = a['attributes']
-                    attr_names = [re.sub('\W+', '', attr).lower() for attr in attr_names]
+                    attr_names = [re.sub('\W+', '', attr).lower() for attr in
+                                  attr_names]
                     for obj in obj_names:
                         for attr in attr_names:
                             if attr in self.color and obj in coco_labels:
-                                # Get the different color name and the different label of
-                                # same parent
+                                # Get the different color name and the
+                                # different label of same parent
                                 attr = self.random_except(attr)
-                                obj = get_same_category_neighbor(obj, things_tree)
+                                obj = get_same_category_neighbor(obj,
+                                                                 things_tree)
                                 sent = obj + ' ' + attr
                                 obj_color_keywords_to_bboxes[sent] = [[]]
 
             # Transform the (object, color) name pair to a question
-            all_ques_to_bboxes_per_image = self.ques_to_bboxes_per_image(obj_color_keywords_to_bboxes)
+            all_ques_to_bboxes_per_image = self.ques_to_bboxes_per_image(
+                obj_color_keywords_to_bboxes)
 
             # limit the number of questions per image
             limit_quest_bbox_per_image = dict()
             for question in all_ques_to_bboxes_per_image:
                 if num_of_ques > 0:
-                    limit_quest_bbox_per_image[question] = all_ques_to_bboxes_per_image[question]
+                    limit_quest_bbox_per_image[question] = \
+                    all_ques_to_bboxes_per_image[question]
                     num_of_ques -= 1
 
             image_stats = vis_image_annt_dict[str(vis_image_id)]
 
-            # Store the (question, bounding boxes) pair to coco_dict if `coco_id` is present
-            # else save it in vis_dict
+            # Store the (question, bounding boxes) pair to coco_dict
+            # if `coco_id` is present else save it in vis_dict
             if image_stats['coco_id'] is None:
                 vis_id_ques_bbox[str(vis_image_id)] = limit_quest_bbox_per_image
             else:
-                coco_id_ques_bbox[str(image_stats['coco_id'])] = {'question_bbox': limit_quest_bbox_per_image,
-                                                                  'vis_height': image_stats['height'],
-                                                                  'vis_width': image_stats['width'],
-                                                                  'url': image_stats['url']}
+                coco_id_ques_bbox[str(image_stats['coco_id'])] = {
+                    'question_bbox': limit_quest_bbox_per_image,
+                    'vis_height': image_stats['height'],
+                    'vis_width': image_stats['width'],
+                    'url': image_stats['url']}
         return coco_id_ques_bbox, vis_id_ques_bbox
 
 
@@ -245,7 +262,8 @@ def main():
     attrib_list = json.load(open(visual_genome_attrib_file_p))
     num_ques_per_image = 2
     aqc = AbsurdQuestionColor()
-    coco_id_ques_bbox, vis_id_ques_bbox = aqc.ques_and_bbox(attrib_list, num_ques_per_image)
+    coco_id_ques_bbox, vis_id_ques_bbox = aqc.ques_and_bbox(attrib_list,
+                                                            num_ques_per_image)
     write_to_file(coco_id_ques_bbox, 'color')
 
 

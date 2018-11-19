@@ -21,9 +21,10 @@ class PositionReasoningQues:
 
     @staticmethod
     def get_relationships():
-        relationships = {'behind', 'next to', 'near', 'in front of', 'on top of', 'under',
-                         'above', 'on side of', 'beside', 'inside', 'below', 'standing next to',
-                         'to right of', 'to left of', 'in back of', 'behind a'}
+        relationships = {'behind', 'next to', 'near', 'in front of',
+                         'on top of', 'under', 'above', 'on side of', 'beside',
+                         'inside', 'below', 'standing next to', 'to right of',
+                         'to left of', 'in back of', 'behind a'}
         return relationships
 
     def check_redundant_bbox(self, new_bbox, obj_color_keywords_to_bboxes):
@@ -45,8 +46,8 @@ class PositionReasoningQues:
         It transform the (subject, predicate, object) sentence to a positional
         reasoning type question and map question of their respective bounding
         boxes.
-        :param sent_box: A sentence containing (subject, predicate, object) and bounding box
-                         separated by delimiter
+        :param sent_box: A sentence containing (subject, predicate, object)
+                         and bounding box separated by delimiter
         :return: A dictionary with mapping of question to bounding boxes
         """
         ques_bbox_dict = dict()
@@ -58,12 +59,14 @@ class PositionReasoningQues:
                 middle = ''
                 suffix = random.choice(self.suffix)
                 eos = ''
-                question = prefix + ' ' + subj + ' ' + predicate + ' ' + obj + ' ' + suffix + eos
+                question = prefix + ' ' + subj + ' ' + predicate + ' ' + \
+                           obj + ' ' + suffix + eos
             else:
                 middle = self.middle_type[0]
                 suffix = ''
                 eos = self.eos[0]
-                question = prefix + ' ' + subj + ' ' + middle + ' ' + predicate + ' ' + obj + eos
+                question = prefix + ' ' + subj + ' ' + middle + ' ' + \
+                           predicate + ' ' + obj + eos
 
             ques_bbox_dict[question] = bboxes
         return ques_bbox_dict
@@ -81,8 +84,10 @@ class PositionReasoningQues:
         sent = None
         bbox = None
         if sub_name != obj_name:
-            bboxes = [int(rel_annt['subject']['x']), int(rel_annt['subject']['y']),
-                      int(rel_annt['subject']['w']), int(rel_annt['subject']['h'])]
+            bboxes = [int(rel_annt['subject']['x']),
+                      int(rel_annt['subject']['y']),
+                      int(rel_annt['subject']['w']),
+                      int(rel_annt['subject']['h'])]
             sent = sub_name + self.delimiter + predicate + \
                    self.delimiter + obj_name
             bbox = [bboxes[0], bboxes[1], bboxes[2], bboxes[3]]
@@ -91,15 +96,19 @@ class PositionReasoningQues:
     def get_ques_and_bbox(self, relation_list, num_ques_per_image):
         """
         It generates a tuple of coco images which is a part of visual genome and
-        the rest of visual genome dataset containing set of question to bounding boxes.
+        the rest of visual genome dataset containing set of question to
+        bounding boxes.
         Steps:
             1. Iterate through every visual genome image annotations
             2. Iterate through every relationship inside that particular image
-            3. Form a string of (subject, predicate, object, bounding box) for that
-               relationship if the predicate matches with our positional relationships
-            4. Transform all the above sentence structure to a (question, bboxes) mapping
-            5. Limit the (question, bounding boxes) pair to variable `num_of_ques` with
-               decreasing order of maximum number of bounding boxes per question
+            3. Form a string of (subject, predicate, object, bounding box) for
+               that relationship if the predicate matches with our positional
+               relationships
+            4. Transform all the above sentence structure to a
+               (question, bboxes) mapping
+            5. Limit the (question, bounding boxes) pair to variable
+               `num_of_ques` with decreasing order of maximum number of
+               bounding boxes per question
             6. store the limited (question, bounding boxes) pair
             7. Jump to step-1 and continue till the end of images
 
@@ -134,15 +143,21 @@ class PositionReasoningQues:
                             if to_add:
                                 sentence_keywords_to_bboxes[sent].append(bbox)
                         else:
-                            if self.check_redundant_bbox(bbox, sentence_keywords_to_bboxes):
+                            if self.check_redundant_bbox(bbox,
+                                                         sentence_keywords_to_bboxes):
                                 sentence_keywords_to_bboxes[sent] = [bbox]
 
-            # A sentence of (subject, predicate, object, bounding box) to (question, bounding box)
-            ques_bbox_dict_per_image = self.sent_bbox_to_ques_bbox(sentence_keywords_to_bboxes)
+            # A sentence of (subject, predicate, object, bounding box)
+            # to (question, bounding box)
+            ques_bbox_dict_per_image = self.sent_bbox_to_ques_bbox(
+                sentence_keywords_to_bboxes)
 
             # limit the number of questions per image
+            # The dictionary is sorted based on decreasing order, hence it
+            # selects the question with maximum number of bounding boxes
             limit_quest_bbox_per_image = dict()
-            for k in sorted(ques_bbox_dict_per_image, key=lambda k: len(ques_bbox_dict_per_image[k]),
+            for k in sorted(ques_bbox_dict_per_image,
+                            key=lambda k: len(ques_bbox_dict_per_image[k]),
                             reverse=True):
                 if num_of_ques > 0:
                     limit_quest_bbox_per_image[k] = ques_bbox_dict_per_image[k]
@@ -150,15 +165,16 @@ class PositionReasoningQues:
 
             image_stats = vis_image_annt_dict[str(vis_image_id)]
 
-            # Store the (question, bounding boxes) pair to coco_dict if `coco_id` is present
-            # else save it in vis_dict
+            # Store the (question, bounding boxes) pair to coco_dict
+            # if `coco_id` is present else save it in vis_dict
             if image_stats['coco_id'] is None:
                 vis_id_ques_bbox[str(vis_image_id)] = limit_quest_bbox_per_image
             else:
-                coco_id_ques_bbox[str(image_stats['coco_id'])] = {'question_bbox': limit_quest_bbox_per_image,
-                                                             'vis_height': image_stats['height'],
-                                                             'vis_width': image_stats['width'],
-                                                             'url': image_stats['url']}
+                coco_id_ques_bbox[str(image_stats['coco_id'])] = {
+                    'question_bbox': limit_quest_bbox_per_image,
+                    'vis_height': image_stats['height'],
+                    'vis_width': image_stats['width'],
+                    'url': image_stats['url']}
         # Transform the bounding boxes from visual genome image dimension to a
         # MS-COCO image dimension
         coco_id_ques_bbox = transform_vis_bbox_to_coco_bbox(coco_id_ques_bbox)
@@ -175,5 +191,6 @@ if __name__ == '__main__':
     relation_list = json.load(open(relationship_path))
     num_ques_per_image = 2
     prq = PositionReasoningQues()
-    coco_id_ques_bbox, vis_id_ques_bbox = prq.get_ques_and_bbox(relation_list, num_ques_per_image)
+    coco_id_ques_bbox, vis_id_ques_bbox = prq.get_ques_and_bbox(relation_list,
+                                                                num_ques_per_image)
     write_to_file(coco_id_ques_bbox, 'positional')

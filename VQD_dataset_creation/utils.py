@@ -132,8 +132,9 @@ def draw_bbox(url, qa_dict, coco_id, dataset_type='vqd', idx=0):
             if len(bb_coord) != 0:
                 x, y, w, h = bb_coord
                 # Create a Rectangle patch
-                rect = patches.Rectangle((x, y), w, h, linewidth=1, edgecolor=ec,
-                                         facecolor='none', label="aa")
+                rect = patches.Rectangle((x, y), w, h, linewidth=1,
+                                         edgecolor=ec, facecolor='none',
+                                         label="aa")
 
                 # Add the patch to the Axes
                 ax.add_patch(rect)
@@ -331,9 +332,9 @@ def write_to_file(coco_id_to_questions_dict, question_type):
     for coco_img_id, questions_dict in coco_id_to_questions_dict.items():
         if coco_img_id in annotations:
             annt_stats = annotations[str(coco_img_id)]
-            # If no previous question found for coco image id, then assign the current
-            # question and bounding boxes as an answer, else just append the new questions
-            # to their respective bounding boxes.
+            # If no previous question found for coco image id, then assign
+            # the current question and bounding boxes as an answer, else just
+            # append the new questions to their respective bounding boxes.
             if len(questions_dict) > 0:
                 ques_bbox = questions_dict['question_bbox']
                 if annt_stats['question_id_bbox'] is None or \
@@ -341,7 +342,8 @@ def write_to_file(coco_id_to_questions_dict, question_type):
                     annt_stats['question_id_bbox'] = dict()
 
                 for ques, bboxes in ques_bbox.items():
-                    annt_stats['question_id_bbox'][ques] = [bboxes, question_type]
+                    annt_stats['question_id_bbox'][ques] = [bboxes,
+                                                            question_type]
 
     # Write to a file
     with open(output_file, 'w') as fp:

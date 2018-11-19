@@ -72,14 +72,17 @@ class ColorReasoningQues:
     def ques_and_bbox(self, attrib_list, num_ques_per_image):
         """
         It generates a tuple of coco images which is a part of visual genome and
-        the rest of visual genome dataset containing set of question to bounding boxes.
+        the rest of visual genome dataset containing set of question to
+        bounding boxes.
         Steps:
             1. Iterate through every visual genome image annotations
-            2. Get the object names which is present in coco labels and color names
+            2. Get the object names which is present in coco labels and
+               color names
             3. Form the pair of (object_names, color_names) to bounding boxes
             4. Convert pairs of (object_names, color_names) to questions
-            5. Limit the (question, bounding boxes) pair to variable `num_of_ques` with
-               decreasing order of maximum number of bounding boxes per question
+            5. Limit the (question, bounding boxes) pair to variable
+               `num_of_ques` with decreasing order of maximum number of
+               bounding boxes per question
             6. store the limited (question, bounding boxes) pair
             7. Jump to step-1 and continue till the end
 
@@ -107,7 +110,8 @@ class ColorReasoningQues:
                     attr_names = a['attributes']
                     synsets = a['synsets']
                     sent = None
-                    attr_names = [re.sub('\W+', '', attr).lower() for attr in attr_names]
+                    attr_names = [re.sub('\W+', '', attr).lower() for attr in
+                                  attr_names]
                     if len(synsets) == 1:
                         for attr in attr_names:
                             if attr in self.color and len(obj_names) >= 1 and \
@@ -125,8 +129,9 @@ class ColorReasoningQues:
                                 break
 
                     if sent is not None:
-                        # if another (obj, attr) pair sentences finds in annotations then there
-                        # is more than one object present of same category
+                        # if another (obj, attr) pair sentences finds in
+                        # annotations then there is more than one object
+                        # present of same category
                         if sent in obj_color_keywords_to_bboxes:
                             x, y, w, h = a['x'], a['y'], a['w'], a['h']
                             existing_bboxes = obj_color_keywords_to_bboxes[sent]
@@ -136,34 +141,43 @@ class ColorReasoningQues:
                                     to_add = False
 
                             if to_add:
-                                obj_color_keywords_to_bboxes[sent].append([x, y, w, h])
+                                obj_color_keywords_to_bboxes[sent].append(
+                                    [x, y, w, h])
                         else:
                             x, y, w, h = a['x'], a['y'], a['w'], a['h']
-                            if self.check_redundant_bbox([x, y, w, h], obj_color_keywords_to_bboxes):
-                                obj_color_keywords_to_bboxes[sent] = [[x, y, w, h]]
+                            if self.check_redundant_bbox([x, y, w, h],
+                                                         obj_color_keywords_to_bboxes):
+                                obj_color_keywords_to_bboxes[sent] = [
+                                    [x, y, w, h]]
 
             # Transform the (object, color) name pair to a question
-            all_ques_to_bboxes_per_image = self.ques_to_bboxes_per_image(obj_color_keywords_to_bboxes)
+            all_ques_to_bboxes_per_image = self.ques_to_bboxes_per_image(
+                obj_color_keywords_to_bboxes)
 
             # limit the number of questions per image
+            # The dictionary is sorted based on decreasing order, hence it
+            # selects the question with maximum number of bounding boxes
             limit_quest_bbox_per_image = dict()
-            for k in sorted(all_ques_to_bboxes_per_image, key=lambda k: len(all_ques_to_bboxes_per_image[k]),
+            for k in sorted(all_ques_to_bboxes_per_image,
+                            key=lambda k: len(all_ques_to_bboxes_per_image[k]),
                             reverse=True):
                 if num_of_ques > 0:
-                    limit_quest_bbox_per_image[k] = all_ques_to_bboxes_per_image[k]
+                    limit_quest_bbox_per_image[k] = \
+                    all_ques_to_bboxes_per_image[k]
                     num_of_ques -= 1
 
             image_stats = vis_image_annt_dict[str(vis_image_id)]
 
-            # Store the (question, bounding boxes) pair to coco_dict if `coco_id` is present
-            # else save it in vis_dict
+            # Store the (question, bounding boxes) pair to coco_dict
+            # if `coco_id` is present else save it in vis_dict
             if image_stats['coco_id'] is None:
                 vis_id_ques_bbox[str(vis_image_id)] = limit_quest_bbox_per_image
             else:
-                coco_id_ques_bbox[str(image_stats['coco_id'])] = {'question_bbox': limit_quest_bbox_per_image,
-                                                                  'vis_height': image_stats['height'],
-                                                                  'vis_width': image_stats['width'],
-                                                                  'url': image_stats['url']}
+                coco_id_ques_bbox[str(image_stats['coco_id'])] = {
+                    'question_bbox': limit_quest_bbox_per_image,
+                    'vis_height': image_stats['height'],
+                    'vis_width': image_stats['width'],
+                    'url': image_stats['url']}
 
         # Transform the bounding boxes from visual genome image dimension to a
         # MS-COCO image dimension
@@ -181,7 +195,8 @@ def main():
     attrib_list = json.load(open(attrib_filename))
     num_ques_per_image = 2
     crq = ColorReasoningQues()
-    coco_id_ques_bbox, vis_id_ques_bbox = crq.ques_and_bbox(attrib_list, num_ques_per_image)
+    coco_id_ques_bbox, vis_id_ques_bbox = crq.ques_and_bbox(attrib_list,
+                                                            num_ques_per_image)
     write_to_file(coco_id_ques_bbox, 'color')
 
 

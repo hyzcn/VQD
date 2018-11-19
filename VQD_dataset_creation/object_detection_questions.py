@@ -30,9 +30,11 @@ class ObjectDetectionQues:
             if len(catg_name_to_bbox) == 0:
                 questions_dict = dict()
             else:
-                questions_dict = self.ques_to_bboxes_per_image(catg_name_to_bbox, num_ques_per_image)
+                questions_dict = self.ques_to_bboxes_per_image(
+                    catg_name_to_bbox, num_ques_per_image)
 
-            coco_id_ques_bbox[str(coco_img_id)] = {'question_bbox': questions_dict}
+            coco_id_ques_bbox[str(coco_img_id)] = {
+                'question_bbox': questions_dict}
         return coco_id_ques_bbox
 
     def ques_to_bboxes_per_image(self, catg_name_to_bbox, num_ques_per_image):

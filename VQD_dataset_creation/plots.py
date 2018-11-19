@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import operator
 
 
-def plot_distribution(data, filename, label=None, xlabel='', ylabel='', title='',
-                      display_count=True, x_axis_rotation=0):
+def plot_distribution(data, filename, label=None, xlabel='', ylabel='',
+                      title='', display_count=True, x_axis_rotation=0):
     """
     Plot the bar chart
     :param data: Array of data
@@ -149,7 +149,8 @@ def attribute_occurrence(annot, ques_ds, type=None):
             ques = ques_dict['question']
             ques_list = ques.split(' ')
             if ques_type == 'simple':
-                if ques.startswith('Show me the') or ques.startswith('Where is the'):
+                if ques.startswith('Show me the') or \
+                        ques.startswith('Where is the'):
                     word = ques_list[3]
                     if '?' in word:
                         word = word.replace('?', '')
@@ -174,7 +175,8 @@ def attribute_occurrence(annot, ques_ds, type=None):
                     add_to_dict(result, word)
             else:
                 print("Something is wrong")
-    sorted_result = sorted(result.items(), key=operator.itemgetter(1), reverse=True)
+    sorted_result = sorted(result.items(), key=operator.itemgetter(1),
+                           reverse=True)
     sorted_result = sorted_result[:41]
 
     data = []
@@ -183,8 +185,10 @@ def attribute_occurrence(annot, ques_ds, type=None):
         data.append(d)
         label.append(l)
 
-    plot_distribution(data, 'dataset/attribute_occurrence_' + str(type) + '.png',
-                      label=label, title='Attribute occurrence(' + str(type) + ')',
+    plot_distribution(data,
+                      'dataset/attribute_occurrence_' + str(type) + '.png',
+                      label=label,
+                      title='Attribute occurrence(' + str(type) + ')',
                       display_count=False, x_axis_rotation=90)
 
 
@@ -243,10 +247,12 @@ if __name__ == '__main__':
     val_annotations = val_js['Annotations']
     val_ques_id = val_js['Question_id']
 
-    length_of_question(train_annotations, train_ques_id, val_annotations, val_ques_id)
+    length_of_question(train_annotations, train_ques_id,
+                       val_annotations, val_ques_id)
     bounding_box_distribution(train_annotations, 'Train')
     bounding_box_distribution(val_annotations, 'Val')
     question_distribution(train_annotations, val_annotations)
-    question_count_per_category(train_annotations, train_ques_id, val_annotations, val_ques_id)
+    question_count_per_category(train_annotations, train_ques_id,
+                                val_annotations, val_ques_id)
     attribute_occurrence(train_annotations, train_ques_id, 'Train')
     attribute_occurrence(train_annotations, train_ques_id, 'Val')

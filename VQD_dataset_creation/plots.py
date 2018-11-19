@@ -233,8 +233,8 @@ def question_count_per_category(t_annot, t_ques_id, v_annot, v_ques_id):
 
 
 if __name__ == '__main__':
-    train_f = 'dataset/vqd_train_2014.json'
-    val_f = 'dataset/vqd_val_2014.json'
+    train_f = 'dataset/vqd_train.json'
+    val_f = 'dataset/vqd_val.json'
     train_js = json.load(open(train_f))
     val_js = json.load(open(val_f))
 

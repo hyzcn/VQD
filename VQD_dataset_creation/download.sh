@@ -12,11 +12,12 @@ mv dataset/annotations/panoptic_*.json dataset/
 wget https://visualgenome.org/static/data/dataset/attributes.json.zip
 unzip attributes.json.zip -d dataset/
 
-
 wget https://visualgenome.org/static/data/dataset/image_data.json.zip
 unzip image_data.json.zip -d dataset/
-
 
 wget https://visualgenome.org/static/data/dataset/relationships_v1_2.json.zip
 unzip relationships_v1_2.json.zip -d dataset/
 
+# MS-COCO 2014 annotations
+wget http://images.cocodataset.org/annotations/annotations_trainval2014.zip
+unzip annotations_trainval2014.zip -d dataset/

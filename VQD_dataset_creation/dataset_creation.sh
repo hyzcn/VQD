@@ -32,6 +32,11 @@ python positional_reasoning_questions.py
 # pair to VQD dataset
 python absurd_questions.py
 
+# It converts the MS-COCO 2017 train/val split images to MS-COCO 2014
+# train/val split. Don't run the below line if you need MS-COCO 2017
+# train/val split
+python dataset_split_ratio.py
+
 # `create_vqd_json.py` creates a final train and val VQD json
 # annotation file.
 python create_vqd_json.py

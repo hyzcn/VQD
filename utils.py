@@ -28,6 +28,12 @@ def parsejson(jsonpath):
     js = json.load(open(jsonpath))    
     return js
 
+def dumpjson(obj,jsonpath):       
+    try:
+        json.dump(obj,open(jsonpath,'w'))    
+    except:       
+        print ("JSON write error!!")
+
 def filetostr(filepath):    
     "return str of file to read"
     if not os.path.exists(filepath):

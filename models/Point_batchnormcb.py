@@ -18,19 +18,27 @@ class RN(nn.Module):
         Q_GRU_out = 1024
         Q_embedding = 300
         LINsize = 1024
-        Boxcoords = 6
+        Boxcoords = 7
 
         self.Ncls = 2 #either true to false 
         
-     
+        bidirectional = True
+        
+        if bidirectional:
+            insize = Boxcoords +  I_CNN + Q_GRU_out*2
+        else:
+            insize = Boxcoords +  I_CNN + Q_GRU_out
+        
+        
         self.QRNN = QuestionParser(dictionaryfile = kwargs['dictionaryfile'],
                                        glove_file = kwargs['glove'],
-                                         dropout=0.0, word_dim=Q_embedding,
+                                         dropout=0.0,
+                                         bidirectional=bidirectional,
+                                         word_dim=Q_embedding,
                                          ques_dim=Q_GRU_out ,
                                          rnn_type= 'GRU')
                
 
-        insize = Boxcoords +  I_CNN + Q_GRU_out
 
         common_layers =   [nn.Linear(insize, LINsize),
                            nn.ReLU(inplace=True),
@@ -40,7 +48,7 @@ class RN(nn.Module):
         self.fcommon = nn.Sequential(*common_layers) 
         
         #B x 100 x 1024         
-        self.bn1 = nn.BatchNorm1d(num_features=100)
+        self.bn1 = nn.BatchNorm1d(num_features=45)
         
         fscore_layers =  [ nn.ReLU(inplace=True),
                            nn.Linear(LINsize,1)]

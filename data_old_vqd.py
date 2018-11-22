@@ -118,14 +118,17 @@ class ReferDataset(Dataset):
 
     def __getitem__(self, idx):
         ent = self.data[idx]
-        sent_id = ent['sentence']['sent_id']
-        file_name = ent['file_name']
+        sent_id = ent['question_id']
         img_id = ent['image_id']
-        ans = ent['category_id']  
-        W = ent['image_info']['width']
-        H = ent['image_info']['height']
-        que = ent['sentence']['sent']                  
+        ans = 0  
+        W = ent['width']
+        H = ent['height']
+        que = ent['question']
+        #0  to N boxes
         gtbox = ent['gtbox']
+        if len(gtbox[0]) == 0:
+        	gtbox = [[0,0,0,0]]
+        
         gtbox = torch.tensor(gtbox)
         #boxes from refcoc is in xywh format
         gtboxorig = convert_xywh_x1y1x2y2(gtbox.unsqueeze(0)).squeeze(0)
@@ -145,12 +148,14 @@ class ReferDataset(Dataset):
         
         tokens = tokenize_ques(self.dictionary,que)
         qfeat = torch.from_numpy(tokens).long()
-        return sent_id,ans,box_feats,box_coordsorig,box_coords_6d.float(),gtboxorig.float(),qfeat,L,idx,correct.view(-1)
+        Lvec = torch.zeros(100).long()
+        Lvec[:L] = 1        
+        return sent_id,ans,box_feats,box_coordsorig,box_coords_6d.float(),gtboxorig.float(),qfeat,Lvec,idx,correct.view(-1)
 
 #%%
 if __name__ == "__main__":
     import config   
-    ds = 'refcoco+'
+    ds = 'vqd'
     config.global_config['dictionaryfile'] = config.global_config['dictionaryfile'].format(ds)
     config.global_config['glove'] = config.global_config['glove'].format(ds)      
     dataloader_kwargs = {}

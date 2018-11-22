@@ -8,7 +8,7 @@ global_config['coco_pool_features'] = '/hdd/manoj/IMGFEATS/resnet152.h5'
 global_config['genome_pool_features'] = '/hdd/manoj/IMGFEATS/resnet152_genome.h5'
 global_config['coco_bottomup'] = '/home/manoj/bottomup_1_100/ssd/genome-trainval.h5'
 global_config['genome_bottomup'] = '/home/manoj/bottomup_1_100/ssd/genome_ourdb/genome-trainval.h5'
-global_config['refcoco_frcnn'] = '/home/manoj/reffeats/refcoco_unc_det_feats.h5'
+global_config['refcoco_frcnn'] = '/home/manoj/reffeats/'
 
 
 #dictionary
@@ -33,6 +33,13 @@ dataset[name] = {}
 dataset[name]['dataset'] = name
 dataset[name]['splitBy'] = 'umd'
 dataset[name]['splits'] = ['val','test']
+
+name= 'vqd'
+dataset[name] = {}
+dataset[name]['dataset'] = name
+dataset[name]['splitBy'] = ''
+dataset[name]['splits'] = ['val']
+
 
 
 from models import Point_GTU , Point_noGTU , Point_RN , Point_noGTU_cb,Point_batchnormcb,Point_tanh

@@ -14,10 +14,12 @@ import torch.nn.functional as F
 from eval_extra import getIOU,convert_xywh_x1y1x2y2
 
 DIR = 'testboxes'
+DIR = 'testboxes/right'
+DIR = 'testboxes/wrong'
 if not os.path.exists(DIR):
     os.mkdir(DIR)
-
-   
+    
+  
 def get_image_name_old(subtype='train2014', image_id='1', format='%s/COCO_%s_%012d.jpg'):
     return format%(subtype, subtype, image_id)
 
@@ -92,7 +94,7 @@ def saveimage(ent,boxes):
     plt.xlabel("{}".format(question))
     plt.ylabel("IOU COCO: {:.2f},BUP: {:.2f}".format(iou_cocogt,iou_bottomupgt))
     path = os.path.join(DIR,"ann_{}_{}".format(sent_id,imglast))
-    if iou_cocogt <0.5:
+    if iou_cocogt >=0.5:
         plt.savefig(path,dpi=150)
     plt.close()
 
@@ -141,7 +143,7 @@ if __name__ == '__main__':
     testds = test_loader.dataset.data
     with torch.set_grad_enabled(False):
         for i,data in enumerate(test_loader):
-            sent_id,ans,box_feats,box_coordsorig,box_coords_6d,gtbox,qfeat,L,idx = data
+            sent_id,ans,box_feats,box_coordsorig,box_coords_6d,gtbox,qfeat,L,idx,correct = data
             ent = testds[i]
 
     
@@ -161,14 +163,15 @@ if __name__ == '__main__':
             
             net_kwargs = { 'box_feats':box_feats,
                            'q_feats':q_feats,
-                           'box_coords':box_coords_6d}
+                           'box_coords':box_coords_6d,
+                           'index':idx}
     
             scores,logits = model(**net_kwargs)  
             logits = logits.view(B*Nbox,-1)
             scores = scores.squeeze()                                   
             maxscore,clspred = torch.max(scores,-1)
 
-            ent['L'] = L.item()
+            ent['L'] = L.sum().item()
             ent['gtnms'] = int(idx.item())            
             ent['scores'] = scores.tolist()
             ent['cls'] =  torch.argmax(logits,dim=1).tolist()

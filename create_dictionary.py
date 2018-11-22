@@ -14,10 +14,13 @@ from models.dictionary import Dictionary
 # the test embeddings will  not be updated during train 
 #https://github.com/allenai/allennlp/issues/516
 
-def create_dictionary(entries):
+def create_dictionary(entries,dataset):
     dictionary = Dictionary()   
     for ent in entries:
-        qs = ent['sentence']['sent']
+        if dataset == 'vqd':
+            qs = ent['question']
+        else:
+            qs = ent['sentence']['sent']
         dictionary.tokenize(qs, True)
     return dictionary
 
@@ -48,7 +51,6 @@ if __name__ == '__main__':
     import os.path as osp
     import json
     
-    ds = 'refcoco+'
     for ds in config.dataset:
         kwargs = {**config.global_config , **config.dataset[ds]}
         data_root = kwargs.get('data_root')
@@ -63,7 +65,7 @@ if __name__ == '__main__':
                 data.extend(d)
         
         
-        d = create_dictionary(data)
+        d = create_dictionary(data,dataset=dataset)
         basedir = os.path.dirname(kwargs['dictionaryfile'].format(dataset))
         if not os.path.exists(basedir):
             os.mkdir(basedir)

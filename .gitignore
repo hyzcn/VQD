@@ -1,3 +1,4 @@
+feats
 __pycache__/
 *.pyc
 *.zip
@@ -5,3 +6,5 @@ __pycache__/
 data
 ref*/
 embedding/
+VQD_dataset_creation/dataset/
+cache/

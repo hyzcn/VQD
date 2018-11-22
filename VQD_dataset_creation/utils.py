@@ -327,7 +327,7 @@ def write_to_file(coco_id_to_questions_dict, question_type):
         save_coco_image_annotations(output_file)
         save_visual_genome_coco_annotations(output_file)
 
-    output = json.load(open(output_file))
+    output = json.load(open(output_file,'r'))
     annotations = output['annotations']
     for coco_img_id, questions_dict in coco_id_to_questions_dict.items():
         if coco_img_id in annotations:

@@ -44,7 +44,7 @@ def plot_distribution(data, filename, label=None, xlabel='', ylabel='',
     plt.title(title)
     plt.tick_params(axis='x', colors='gray')
     plt.tick_params(axis='y', colors='gray')
-    plt.legend()
+    #plt.legend()
     plt.tight_layout()
     plt.savefig(filename, dpi=150)
 
@@ -77,7 +77,7 @@ def length_of_question(t_annot, t_ques_id, v_annot, v_ques_id):
     plot_distribution(result, 'dataset/len_question.png',
                       xlabel='Length of questions',
                       ylabel='Number of questions',
-                      title='Length of question distribution')
+                      title='')
 
 
 def bounding_box_distribution(t_annot, type=None):
@@ -102,7 +102,7 @@ def bounding_box_distribution(t_annot, type=None):
     plot_distribution(result, 'dataset/bbox_distribution_' + type + '.png',
                       xlabel='Bounding boxes per questions',
                       ylabel='Number of questions',
-                      title='Bounding Box Distribution(' + type + ')')
+                      title='')
 
 
 def question_distribution(t_annot, v_annot):
@@ -122,7 +122,7 @@ def question_distribution(t_annot, v_annot):
     plot_distribution(result, 'dataset/question_distribution.png',
                       xlabel='Number of questions',
                       ylabel='Number of images',
-                      title='Question Distribution')
+                      title='')
 
 
 def attribute_occurrence(annot, ques_ds, type=None):
@@ -188,7 +188,7 @@ def attribute_occurrence(annot, ques_ds, type=None):
     plot_distribution(data,
                       'dataset/attribute_occurrence_' + str(type) + '.png',
                       label=label,
-                      title='Attribute occurrence(' + str(type) + ')',
+                      title='',
                       display_count=False, x_axis_rotation=90)
 
 
@@ -237,8 +237,8 @@ def question_count_per_category(t_annot, t_ques_id, v_annot, v_ques_id):
 
 
 if __name__ == '__main__':
-    train_f = 'dataset/vqd_train.json'
-    val_f = 'dataset/vqd_val.json'
+    train_f = 'VQD/vqd_train.json'
+    val_f = 'VQD/vqd_val.json'
     train_js = json.load(open(train_f))
     val_js = json.load(open(val_f))
 
@@ -255,4 +255,4 @@ if __name__ == '__main__':
     question_count_per_category(train_annotations, train_ques_id,
                                 val_annotations, val_ques_id)
     attribute_occurrence(train_annotations, train_ques_id, 'Train')
-    attribute_occurrence(train_annotations, train_ques_id, 'Val')
+    attribute_occurrence(val_annotations, val_ques_id, 'Val')

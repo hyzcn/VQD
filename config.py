@@ -40,15 +40,17 @@ dataset[name]['dataset'] = name
 dataset[name]['splitBy'] = ''
 dataset[name]['splits'] = ['val']
 
-
-
-from models import Point_GTU , Point_noGTU , Point_RN , Point_noGTU_cb,Point_batchnormcb,Point_tanh
 #model names
+from models import Point_GTU , Point_noGTU , Point_RN ,\
+                    Point_noGTU_cb,Point_batchnormcb,Point_tanh,\
+                    Point_boxonly
+
 models = { 
           'GTU': Point_GTU.RN,
           'noGTU': Point_noGTU.RN,
           'noGTUcb': Point_noGTU_cb.RN,
           'tanh': Point_tanh.RN,
           'batchnormcb':Point_batchnormcb.RN,
+          'boxonly':Point_boxonly.RN,
           'RN': Point_RN.RN,
           } 

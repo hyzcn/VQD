@@ -59,7 +59,7 @@ htmle = """
 
 @app.route('/')
 def hello_world():
-    folders = glob.glob('refcoco*/')
+    folders = glob.glob('refcoco*/') + glob.glob('vqd*/')
     folders = sorted(folders)
     rows = ''
     for folder in folders:

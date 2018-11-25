@@ -158,7 +158,9 @@ class ReferDataset(Dataset):
         
         tokens = tokenize_ques(self.dictionary,que)
         qfeat = torch.from_numpy(tokens).long()
-        Lvec = torch.zeros(45).long()
+        #tortal number of entries
+        N = box_coordsorig.shape[0]
+        Lvec = torch.zeros(N).long()
         Lvec[:L] = 1        
         return sent_id,ans,box_feats,box_coordsorig,box_coords_6d.float(),gtboxorig.float(),qfeat,Lvec,idx,correct.view(-1)
 

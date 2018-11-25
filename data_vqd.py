@@ -126,22 +126,30 @@ class ReferDataset(Dataset):
         que = ent['question']
         #0  to N boxes
         gtbox = ent['gtbox']
+        L_gtboxes = len(gtbox)
+        Max_box = 15 #the max number of boxes  in VQD
         if len(gtbox[0]) == 0:
-        	gtbox = [[0,0,0,0]]
+        	gtbox = [[0,0,1,1.0]]*Max_box
+        else:
+            gtbox = gtbox + [[0,0,1,1.0]]*(Max_box - L_gtboxes)
         
-        gtbox = torch.tensor(gtbox)
+        gtbox = torch.tensor(gtbox).float()
         #boxes from refcoc is in xywh format
-        gtboxorig = convert_xywh_x1y1x2y2(gtbox.unsqueeze(0)).squeeze(0)
-        box_coords = ent['boxes']
-        box_coords = torch.tensor(box_coords)
+        gtboxorig = convert_xywh_x1y1x2y2(gtbox)
 
         L, W, H ,box_feats,box_coords_6d, box_coordsorig = self._load_image_coco(img_id)        
         box_coords_6d = torch.from_numpy(box_coords_6d)
         
         #boxes in h4files are in x1 y1 x2 y2 format
-        iou = getIOU(gtboxorig.unsqueeze(0),torch.from_numpy(box_coordsorig))
-        correct = iou>0.5
-        _,idx = torch.max(iou,dim=0)
+        iou = getIOU(gtboxorig.unsqueeze(1),torch.from_numpy(box_coordsorig)).squeeze(-1)
+        correct = iou>0.5        
+        correct = correct.sum(dim=0).clamp(max=1)
+        
+        _,idxall = torch.max(iou,dim=1)
+        #maybe more than one indices so sample for now
+        idx = torch.tensor([int(np.random.choice(idxall))])
+        idx = torch.tensor([int(idxall[0])])
+               
 #        print (iou,iou.shape,box_coordsorig,"index",idx)
         gtboxiou = box_coordsorig[idx]
         gtboxiou = torch.from_numpy(gtboxiou)
@@ -150,7 +158,10 @@ class ReferDataset(Dataset):
         qfeat = torch.from_numpy(tokens).long()
         Lvec = torch.zeros(100).long()
         Lvec[:L] = 1        
-        return sent_id,ans,box_feats,box_coordsorig,box_coords_6d.float(),gtboxorig.float(),qfeat,Lvec,idx,correct.view(-1)
+        return sent_id,ans,box_feats,box_coordsorig,box_coords_6d.float(),\
+                gtboxorig[0].float(),qfeat,Lvec,idx,correct.view(-1)
+
+
 
 #%%
 if __name__ == "__main__":

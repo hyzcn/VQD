@@ -12,6 +12,7 @@ class ObjectDetectionQues:
         self.prefix_type1 = ["Show the", "Show me the"]
         self.prefix_type2 = ["Where is the"]
         self.suffix = [None, "in the image", "in the picture"]
+        self.person_count = 0
 
     def ques_and_bbox(self, annotations, num_ques_per_image):
         """
@@ -47,6 +48,12 @@ class ObjectDetectionQues:
         """
         all_ques_to_bboxes_per_image = dict()
         for name, bbox in catg_name_to_bbox.items():
+            # Limit the questions related to `person` category to balance
+            # the questions across MS-COCO object category
+            if name == 'person' and self.person_count > 15000:
+                continue
+            if name == 'person':
+                self.person_count += 1
             prefix_type2 = self.prefix_type2[0]
             prefix_type1 = random.choice(self.prefix_type1)
             prefix_types = {prefix_type1, prefix_type2}
@@ -73,7 +80,8 @@ class ObjectDetectionQues:
                         key=lambda k: len(all_ques_to_bboxes_per_image[k]),
                         reverse=sort_seq):
             if num_ques_per_image > 0:
-                limit_quest_to_bbox_per_image[k] = all_ques_to_bboxes_per_image[k]
+                limit_quest_to_bbox_per_image[k] = all_ques_to_bboxes_per_image[
+                    k]
                 num_ques_per_image -= 1
         return limit_quest_to_bbox_per_image
 

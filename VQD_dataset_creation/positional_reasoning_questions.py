@@ -189,7 +189,7 @@ if __name__ == '__main__':
     """
     relationship_path = 'dataset/relationships.json'
     relation_list = json.load(open(relationship_path))
-    num_ques_per_image = 2
+    num_ques_per_image = 4
     prq = PositionReasoningQues()
     coco_id_ques_bbox, vis_id_ques_bbox = prq.get_ques_and_bbox(relation_list,
                                                                 num_ques_per_image)

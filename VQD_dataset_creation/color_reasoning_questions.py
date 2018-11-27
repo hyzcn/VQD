@@ -193,7 +193,7 @@ def main():
     """
     attrib_filename = 'dataset/attributes.json'
     attrib_list = json.load(open(attrib_filename))
-    num_ques_per_image = 2
+    num_ques_per_image = 4
     crq = ColorReasoningQues()
     coco_id_ques_bbox, vis_id_ques_bbox = crq.ques_and_bbox(attrib_list,
                                                             num_ques_per_image)

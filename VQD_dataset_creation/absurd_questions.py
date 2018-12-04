@@ -100,6 +100,24 @@ class AbsurdQuestionSimple:
         return limit_quest_to_bbox_per_image
 
 
+def get_single_color_coco_labels():
+    """
+    MS-COCO `things` labels that have single color attribute unlike `zebra`
+    :return: refined COCO labels
+    """
+    label = [
+      'baseball bat', 'sports ball', 'frisbee', 'suitcase', 'handbag',
+      'eye glasses', 'shoe', 'backpack', 'hat', 'bear', 'elephant', 'horse',
+      'bench', 'parking meter', 'stop sign', 'street sign', 'fire hydrant',
+      'airplane', 'car', 'hair brush', 'hair drier', 'teddy bear', 'scissors',
+      'vase', 'blender', 'refrigerator', 'sink', 'toaster', 'oven',
+      'microwave', 'keyboard', 'remote', 'mouse', 'laptop', 'tv', 'door',
+      'toiler', 'desk', 'window', 'dinning table', 'mirror', 'couch', 'chair',
+      'hot dog', 'carrot', 'broccoli', 'orange', 'apple', 'banana', 'bowl',
+      'spoon', 'knife', 'fork', 'bottle']
+    return label
+
+
 class AbsurdQuestionColor:
     """
     Generates a Color Reasoning Absurd Questions
@@ -196,6 +214,7 @@ class AbsurdQuestionColor:
         things_tree, stuff_tree = generate_tree(panop_catg_file_p)
         categories = json.load(open(panop_catg_file_p))
         coco_labels = categories['things']['label'].values()
+        single_color_objects = get_single_color_coco_labels()
 
         for attr_dict in attrib_list:
             vis_image_id = attr_dict['image_id']
@@ -206,13 +225,24 @@ class AbsurdQuestionColor:
                 if 'names' in a and 'attributes' in a:
                     obj_names = a['names']
                     attr_names = a['attributes']
-                    attr_names = [re.sub('\W+', '', attr).lower() for attr in
-                                  attr_names]
+                    attr_names = [re.sub('\W+', '', attr).lower()
+                                  for attr in attr_names]
                     for obj in obj_names:
                         for attr in attr_names:
                             if attr in self.color and obj in coco_labels:
-                                # Get the different color name and the
+                                # Get the different color name and/or the
                                 # different label of same parent
+
+                                one_negate = random.choice([True, False])
+                                if one_negate:
+                                    # Get the different color by keeping by
+                                    # object same
+                                    if obj in single_color_objects:
+                                        attr = self.random_except(attr)
+                                        sent = obj + ' ' + attr
+                                        obj_color_keywords_to_bboxes[sent] = [[]]
+                                        continue
+
                                 attr = self.random_except(attr)
                                 obj = get_same_category_neighbor(obj,
                                                                  things_tree)

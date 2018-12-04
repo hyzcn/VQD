@@ -5,6 +5,7 @@ import numpy as np
 import cv2
 import random
 import sys
+import copy
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
@@ -22,6 +23,26 @@ def get_coco_labels():
     return coco_labels
 
 
+def get_limited_coco_labels():
+    """
+    Generate a coco labels that includes all the `things` labels and some
+    of the `stuff` labels.
+    :return: A dictionary of coco labels
+    """
+    panop_catg_file_p = 'dataset/panoptic_categories.json'
+    coco_things_labels = json.load(open(panop_catg_file_p))['things']['label']
+    coco_stuff_labels = json.load(open(panop_catg_file_p))['stuff']['label']
+
+    new_coco_stuff_labels = copy.deepcopy(coco_stuff_labels)
+
+    for id, label in coco_stuff_labels.items():
+        if '-' in label:
+            del new_coco_stuff_labels[id]
+
+    coco_things_labels.update(new_coco_stuff_labels)
+    return coco_things_labels
+
+
 def transform_vis_bbox_to_coco_bbox(coco_id_ques_dict):
     """
     The image dimension in visual genome and MS-COCO dataset is different
@@ -34,7 +55,8 @@ def transform_vis_bbox_to_coco_bbox(coco_id_ques_dict):
     :return: Dictionary with transformed bounding boxes
     """
     new_coco_id_ques_dict = dict()
-    panoptic_coco_image_dict = json.load(open('dataset/panoptic_images.json'))['images']
+    panoptic_coco_image_dict = json.load(open('dataset/panoptic_images.json'))[
+        'images']
     for coco_id, stats in coco_id_ques_dict.items():
         image_stats = panoptic_coco_image_dict[str(coco_id)]
 
@@ -56,7 +78,8 @@ def transform_vis_bbox_to_coco_bbox(coco_id_ques_dict):
 
                 new_bbox = [new_x, new_y, new_w, new_h]
                 bboxes[i] = new_bbox
-        new_coco_id_ques_dict[coco_id] = {'question_bbox': stats['question_bbox']}
+        new_coco_id_ques_dict[coco_id] = {
+            'question_bbox': stats['question_bbox']}
     return new_coco_id_ques_dict
 
 
@@ -327,7 +350,7 @@ def write_to_file(coco_id_to_questions_dict, question_type):
         save_coco_image_annotations(output_file)
         save_visual_genome_coco_annotations(output_file)
 
-    output = json.load(open(output_file,'r'))
+    output = json.load(open(output_file, 'r'))
     annotations = output['annotations']
     for coco_img_id, questions_dict in coco_id_to_questions_dict.items():
         if coco_img_id in annotations:

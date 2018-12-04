@@ -17,7 +17,7 @@ class ColorReasoningQues:
         self.middle_type1 = ["which is", "which are"]
         self.middle_type2 = ["is", "are"]
         self.suffix = ["in color"]
-        self.eos = ['', '?']
+        self.eos = ['.', '?']
         self.color = self.get_color()  # set of color names
 
     def get_color(self):

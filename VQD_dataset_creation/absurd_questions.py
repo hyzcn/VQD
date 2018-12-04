@@ -17,6 +17,7 @@ class AbsurdQuestionSimple:
         self.prefix_type1 = ["Show the", "Show me the"]
         self.prefix_type2 = ["Where is the"]
         self.suffix = [None, "in the image", "in the picture"]
+        self.eos = ['.', '?']
 
     def ques_and_bbox(self, annotations, num_ques_per_image):
         """
@@ -78,14 +79,14 @@ class AbsurdQuestionSimple:
             suffix = random.choice(self.suffix)
             if suffix is None:
                 if prefix.startswith('Show'):
-                    question = prefix + ' ' + name
+                    question = prefix + ' ' + name + self.eos[0]
                 else:
-                    question = prefix + ' ' + name + '?'
+                    question = prefix + ' ' + name + self.eos[1]
             else:
                 if prefix.startswith('Show'):
-                    question = prefix + ' ' + name + ' ' + suffix
+                    question = prefix + ' ' + name + ' ' + suffix + self.eos[0]
                 else:
-                    question = prefix + ' ' + name + ' ' + suffix + '?'
+                    question = prefix + ' ' + name + ' ' + suffix + self.eos[1]
 
             all_ques_to_bboxes_per_image[question] = [[]]
 
@@ -112,7 +113,7 @@ class AbsurdQuestionColor:
         self.middle_type1 = ["which is", "which are"]
         self.middle_type2 = ["is", "are"]
         self.suffix = ["in color"]
-        self.eos = ['', '?']
+        self.eos = ['.', '?']
         self.color = self.get_color()
 
     def get_color(self):

@@ -12,6 +12,7 @@ class ObjectDetectionQues:
         self.prefix_type1 = ["Show the", "Show me the"]
         self.prefix_type2 = ["Where is the"]
         self.suffix = [None, "in the image", "in the picture"]
+        self.eos = ['.', '?']
         self.person_count = 0
 
     def ques_and_bbox(self, annotations, num_ques_per_image):
@@ -23,8 +24,7 @@ class ObjectDetectionQues:
         :return: dict of questions to bounding boxes
         """
         coco_id_ques_bbox = {}
-        panop_catg_file_p = 'dataset/panoptic_categories.json'
-        coco_labels = json.load(open(panop_catg_file_p))['things']['label']
+        coco_labels = get_limited_coco_labels()
 
         for coco_img_id, stats in annotations.items():
             catg_name_to_bbox = get_catg_name_to_bbox(stats, coco_labels)
@@ -62,14 +62,14 @@ class ObjectDetectionQues:
             suffix = random.choice(self.suffix)
             if suffix is None:
                 if prefix.startswith('Show'):
-                    question = prefix + ' ' + name
+                    question = prefix + ' ' + name + self.eos[0]
                 else:
-                    question = prefix + ' ' + name + '?'
+                    question = prefix + ' ' + name + self.eos[1]
             else:
                 if prefix.startswith('Show'):
-                    question = prefix + ' ' + name + ' ' + suffix
+                    question = prefix + ' ' + name + ' ' + suffix + self.eos[0]
                 else:
-                    question = prefix + ' ' + name + ' ' + suffix + '?'
+                    question = prefix + ' ' + name + ' ' + suffix + self.eos[1]
 
             all_ques_to_bboxes_per_image[question] = bbox
 

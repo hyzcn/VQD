@@ -15,7 +15,7 @@ class PositionReasoningQues:
         self.prefix = ['Which', 'Show the']
         self.middle_type = ['is']
         self.suffix = ['in the picture', 'in the image', '']
-        self.eos = ['?']
+        self.eos = ['.', '?']
         self.delimiter = '<=>'
         self.relationships = self.get_relationships()
 
@@ -58,15 +58,13 @@ class PositionReasoningQues:
             if prefix.startswith("Show"):
                 middle = ''
                 suffix = random.choice(self.suffix)
-                eos = ''
                 question = prefix + ' ' + subj + ' ' + predicate + ' ' + \
-                           obj + ' ' + suffix + eos
+                           obj + ' ' + suffix + self.eos[0]
             else:
                 middle = self.middle_type[0]
                 suffix = ''
-                eos = self.eos[0]
                 question = prefix + ' ' + subj + ' ' + middle + ' ' + \
-                           predicate + ' ' + obj + eos
+                           predicate + ' ' + obj + self.eos[1]
 
             ques_bbox_dict[question] = bboxes
         return ques_bbox_dict

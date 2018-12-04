@@ -14,8 +14,8 @@ class ColorReasoningQues:
         Constructor to initializes the parameters
         """
         self.prefix = ["Which", "Show me the"]
-        self.middle_type1 = ["which is", "which are"]
-        self.middle_type2 = ["is", "are"]
+        self.middle_type1 = ["which is", "that is", ""]
+        self.middle_type2 = ["is"]
         self.suffix = ["in color"]
         self.eos = ['.', '?']
         self.color = self.get_color()  # set of color names
@@ -57,7 +57,12 @@ class ColorReasoningQues:
             obj_name, color_name = keywords.rsplit(" ", 1)
             prefix = random.choice(self.prefix)
             if prefix.startswith("Show"):
-                middle = self.middle_type1[0]
+                middle = random.choice(self.middle_type1)
+                if len(middle) == 0:
+                    question = prefix + ' ' + color_name + ' ' + obj_name + \
+                               self.eos[0]
+                    all_ques_to_bboxes_per_image[question] = bboxes
+                    continue
                 eos = self.eos[0]
             else:
                 middle = self.middle_type2[0]

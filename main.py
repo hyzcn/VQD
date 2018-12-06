@@ -8,7 +8,7 @@ from utils import load_checkpoint
 from utils import get_current_time
 from utils import Logger
 from opt import parse_args
-from data import ReferDataset
+from data_frcnn import ReferDataset
 from train import run
 
 if __name__ == '__main__':
@@ -46,8 +46,8 @@ if __name__ == '__main__':
 
     optimizer = torch.optim.Adam(model.parameters(),lr=args.lr)
     start_epoch = 0
-    if args.resume:
-         start_epoch,meta = load_checkpoint(args.resume,model,optimizer)
+    if args.load:
+         start_epoch,meta = load_checkpoint(args.load,model,optimizer)
     else:
         logger.write("== {} ==".format(args.expl))
         logger.write(str(args).replace(',',',\n'))

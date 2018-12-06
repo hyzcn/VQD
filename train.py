@@ -12,6 +12,10 @@ import numpy as np
 import eval_extra
 #from CLR import CyclicLR
 from utils import adjust_learning_rate
+from calculate_mean_ap import get_avg_precision_at_iou
+
+
+
 #%%
 
 
@@ -28,9 +32,8 @@ def main(**kwargs):
     istrain = kwargs.get('istrain')
   
     start_time = time.time()
-    true = []
-    pred = []
-    idxs = []
+    pred = {}
+    #idxs = []
     loss_meter = AverageMeter()
     loss_meter.reset()
     
@@ -43,13 +46,14 @@ def main(**kwargs):
         net.eval()
 
     clslossfn = nn.CrossEntropyLoss(reduction='none')
-    mmloss = nn.MultiMarginLoss()
+    #mmloss = nn.MultiMarginLoss()
+    mmloss = nn.CrossEntropyLoss()
     
     with torch.set_grad_enabled(istrain):
-        for i, data in enumerate(loader):
+        for imain, data in enumerate(loader):
             sent_id,ans,box_feats,box_coordsorig,box_coords_6d,gtbox,qfeat,L,idx,correct = data            
-            idxs.extend(sent_id.tolist())        
-            true.extend(gtbox.tolist())
+            #idxs.extend(sent_id.tolist())        
+            #true.extend(gtbox.tolist())
             #normalize the box feats
             box_feats = F.normalize(box_feats,p=2,dim=-1)
             box_feats = box_feats.to(device)
@@ -69,9 +73,14 @@ def main(**kwargs):
             scores,logits = net(**net_kwargs)            
             logits = logits.view(B*Nbox,-1)
             
-            idx_expand = correct.view(-1)
-            idx_expand = idx_expand.to(device)                   
-            loss_cc_allbox = clslossfn(logits.view(B*Nbox,-1), idx_expand.long())            
+            #idx_expand = correct.view(-1)
+               
+            idx_expand_cls = correct
+            #idx_expand_cls = torch.mul(correct.long(),ans.unsqueeze(1))
+            idx_expand_cls = idx_expand_cls.view(-1).to(device)
+            
+                
+            loss_cc_allbox = clslossfn(logits.view(B*Nbox,-1), idx_expand_cls.long())            
             loss_cc_allbox = loss_cc_allbox[ L.view(-1) == 1]
             len_true_box = L.sum().item()
             loss_cc = torch.sum( loss_cc_allbox)/len_true_box
@@ -87,16 +96,28 @@ def main(**kwargs):
             ignore_index_scores = torch.mul(gt_scores,(L==0).float())            
             scores_det  =  ignore_index_scores + torch.mul(scores_det,L.float())
 
-            
+            #Losses
             loss_margin = mmloss(scores,idx.to(device).squeeze()) 
-            loss = loss_cc + loss_margin           
-            _,clspred = torch.max(scores,-1)
+            loss = loss_cc + loss_margin     
             
+            #get scores ans get max scores
+            _,clspred = torch.max(scores,-1)           
+    
+            scores_lst = scores.tolist()
+            clsp = clspred.tolist()
+            for i,qid in enumerate(sent_id.tolist()):
+                dent = {}
+                Nbox = clsp[i]
+                allboxes = box_coordsorig[i].tolist()
+                allscores = scores_lst[i]              
+                Nbox = clspred[i].item()
+                dent['boxes'] =  [allboxes[Nbox]]
+                dent['scores'] = [0.99]            
+                #ent['boxes'] =  allboxes[:Nbox]
+                #ent['scores'] = [:Nbox]
+                pred[qid] = dent
             
-            iipred = torch.cat( (torch.tensor(range(0,B)).unsqueeze(1).long(),clspred.cpu().unsqueeze(1).long()),dim=1)
-            predbox = box_coordsorig[iipred[:,0],iipred[:,1]]
-            pred.extend(predbox.tolist())
-        
+       
             loss_meter.update(loss.item())   
             if istrain:
                 #scheduler.step()
@@ -106,11 +127,11 @@ def main(**kwargs):
                     nn.utils.clip_grad_norm_(net.parameters(), kwargs.get('clip_norm'))
                 optimizer.step()
     
-            if i == 0 and epoch == 0 and istrain:
-                print ("Starting loss: {:.4f}".format(loss.item()))
+            if imain == 0 and epoch == 0 and istrain:
+                    print ("Starting loss: {:.4f}".format(loss.item()))
+                
     
-    
-            if i % Nprint == Nprint-1:
+            if imain % Nprint == Nprint-1:
                 infostr = "Epoch [{}]:Iter [{}]/[{}] Loss: {:.4f} Time: {:2.2f} s"
                 printinfo = infostr.format(epoch , i, len(loader),
                                            loss_meter.avg,time.time() - start_time)
@@ -119,11 +140,37 @@ def main(**kwargs):
         
         print("Completed in: {:2.2f} s".format(time.time() - start_time))
         ent = {}
-        ent['true'] = true
         ent['pred'] = pred
         ent['loss'] = loss_meter.avg
-        ent['sent_ids'] = idxs
         return ent
+
+
+def getGTboxes(data):
+    gt = {}
+    for entry in data:
+        qid = entry['sentence']['sent_id']
+        xywh = np.array([entry['gtbox']])
+        gtbox = utils.xywh_to_xyxy(xywh)     
+        gt[qid] = gtbox.tolist()
+    return gt
+
+
+def testonly(**kwargs):
+    epoch = kwargs.get('start_epoch')   
+    testloader = kwargs.get('test_loader')
+    kwargs['epoch'] = epoch
+    start_time = time.time()
+    test =  main(istrain=False,**kwargs)
+    total_time  = time.time() - start_time
+
+    print('Epoch {} Time {:2.2f} s ------'.format(epoch,total_time))
+    print('\tTest Loss: {:.4f}'.format(test['loss']))
+ 
+          
+    gt = {}
+    gt['test'] = getGTboxes(testloader.dataset.data)    
+    datatest = get_avg_precision_at_iou(gt['test'], test['pred'], iou_thr= 0.5)
+    print(' Test avg precision: {:.4f}'.format(datatest['avg_prec']))
 
 
 
@@ -132,17 +179,23 @@ def run(**kwargs):
     savefolder = kwargs.get('savefolder')
     logger = kwargs.get('logger')
     epochs = kwargs.get('epochs')
+    savemodel = kwargs.get('savemodel')
     #there are many test loaders
     start_epoch = kwargs.get('start_epoch')
-    eval_baselines = kwargs.get('nobaselines') == False
-
-    if start_epoch == 0 and eval_baselines: # if not resuming
-        pass
-        #eval_extra.main(**kwargs)
+    trainloader = kwargs.get('train_loader')
+    testloader = kwargs.get('test_loader')
+    #test only mode        
+    if kwargs.get('test') == True:
+        testonly(**kwargs)
+        return 0
         
 
     early_stop = EarlyStopping(monitor='loss',patience=8)   
     Modelsavefreq = 1
+           
+    gt = {}
+    gt['test'] = getGTboxes(testloader.dataset.data)
+    gt['train'] = getGTboxes(trainloader.dataset.data)
 
     for epoch in range(start_epoch,epochs):
 
@@ -155,48 +208,32 @@ def run(**kwargs):
         logger.write('Epoch {} Time {:2.2f} s ------'.format(epoch,total_time))
         logger.write('\tTrain Loss: {:.4f}'.format(train['loss']))
         logger.write('\tTest Loss: {:.4f}'.format(test['loss']))
- 
-        traingt = torch.tensor(train['true'])
-        trainpred = torch.tensor(train['pred'])
-        trainacc = eval_extra.getaccuracy(traingt,trainpred)
-        logger.write("\tTrain Precision@1/Top 1 precision or Accuracy {:.2f}%".format(trainacc))
-              
-        predictions = dict(zip(test['sent_ids'] , test['pred']))           
-        testgt = torch.tensor(test['true'])
-        testpred = torch.tensor(test['pred'])
-        testacc = eval_extra.getaccuracy(testgt,testpred)
-        logger.write("\tTest Precision@1/Top 1 precision or Accuracy {:.2f}%".format(testacc))
+        
+        datatrain = get_avg_precision_at_iou(gt['train'], train['pred'], iou_thr= 0.5)
+        logger.write('Train mAP: {:.4f}'.format(datatrain['avg_prec']))
+        
+        datatest = get_avg_precision_at_iou(gt['test'], test['pred'], iou_thr= 0.5)
+        logger.write('Test mAP: {:.4f}'.format(datatest['avg_prec']))
         
         #log extra information in a logger dict
         logger.append('train loss',train['loss'])
         logger.append('test loss',test['loss'])
-        logger.append('train acc',trainacc)
-        logger.append('test acc',testacc)        
+        logger.append('train acc',100*datatrain['avg_prec'])
+        logger.append('test acc',100*datatest['avg_prec'])        
         
 
         if kwargs.get('savejson'):
-            js = []
-            for qid in predictions:
-                ent = {}
-                ent['sent_id'] = int(qid)
-                ent['bbox'] = predictions[qid]
-                js.append(ent)
             path = os.path.join(savefolder, 'test{}.json'.format(epoch))
-            json.dump(js,open(path,'w'))
+            json.dump(test['pred'],open(path,'w'))
             
         is_best = False
         if epoch % Modelsavefreq == 0:
-            print ('Saving model ....')
-            tbs = {
-                'epoch': epoch,
-                'state_dict': kwargs.get('model').state_dict(),
-                'true':test['true'],
-                'pred':test['pred'],
-                'sent_ids': test['sent_ids'],
-                'optimizer' : kwargs.get('optimizer').state_dict(),
-            }
-
-            save_checkpoint(savefolder,tbs,is_best)
+            if savemodel or is_best:
+                print ('Saving model ....')
+                tbs = {'epoch': epoch,
+                    'state_dict': kwargs.get('model').state_dict(),
+                    'optimizer' : kwargs.get('optimizer').state_dict()}  
+                save_checkpoint(savefolder,tbs,is_best)
 
         logger.dump_info()
                 

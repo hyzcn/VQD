@@ -7,6 +7,10 @@ from models.language import tokenize_ques
 import os.path as osp
 import json
 from eval_extra import getIOU,convert_xywh_x1y1x2y2
+from config import coco_classes
+
+#from models.pytorch_pretrained_bert import BertTokenizer
+
 
 #"""
 #{'ann_id': 1706357,
@@ -34,6 +38,22 @@ def xywh_to_xyxy(boxes):
   """Convert [x y w h] box format to [x1 y1 x2 y2] format."""
   return np.hstack((boxes[:, 0:2], boxes[:, 0:2] + boxes[:, 2:4] - 1))
 
+# # Load pre-trained model tokenizer (vocabulary)
+# tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')  
+# def tokenize_quesbert(question,max_length=14):
+#     tokenized_text = tokenizer.tokenize(question)
+#     # Convert token to vocabulary indices
+#     indexed_tokens = tokenizer.convert_tokens_to_ids(tokenized_text)
+#     indexed_tokens = indexed_tokens[:max_length]
+    
+#     # Convert inputs to PyTorch tensors
+#     if len(indexed_tokens) < max_length:
+#         # Note here we pad in front of the sentence
+#         padding = [0] * (max_length - len(indexed_tokens))
+#         indexed_tokens = padding + indexed_tokens
+#     assert len(indexed_tokens) ==  max_length , " {} Tokens NOT EQUAL TO MAX length.".format(indexed_tokens)
+#     return np.array(indexed_tokens)
+
 
 class ReferDataset(Dataset):
 
@@ -48,6 +68,9 @@ class ReferDataset(Dataset):
         
         with open(data_json,'r') as f:
             self.data = json.load(f)
+            
+            
+  
 
 
         dictfile = kwargs.get('dictionaryfile')
@@ -122,6 +145,8 @@ class ReferDataset(Dataset):
                 
         if self.spatial:
             spatials = self._process_boxes(box_locations,W,H)
+            spatials[L:] = 0
+            box_locations[L:] = 0
             return L,W,H,box_feats,spatials,box_locations
         return L,W,H,box_feats, box_locations
         
@@ -158,26 +183,33 @@ class ReferDataset(Dataset):
         
         tokens = tokenize_ques(self.dictionary,que)
         qfeat = torch.from_numpy(tokens).long()
+                
+        #tokens = tokenize_quesbert(que)
+        #qfeat = torch.from_numpy(tokens).long()
+       
+        
         #tortal number of entries
         N = box_coordsorig.shape[0]
         Lvec = torch.zeros(N).long()
-        Lvec[:L] = 1        
+        Lvec[:L] = 1   
+        ans = coco_classes.index(ans) #convert to 0 - 80 index 
         return sent_id,ans,box_feats,box_coordsorig,box_coords_6d.float(),gtboxorig.float(),qfeat,Lvec,idx,correct.view(-1)
 
 #%%
 if __name__ == "__main__":
     import config   
+    from config import cocoid2label
     ds = 'refcoco'
     config.global_config['dictionaryfile'] = config.global_config['dictionaryfile'].format(ds)
     config.global_config['glove'] = config.global_config['glove'].format(ds)      
-    dataloader_kwargs = {}
-    dataloader_kwargs = {**config.global_config , **config.dataset[ds] }
-    dataloader_kwargs['split'] = 'val'
-    cd = ReferDataset(**dataloader_kwargs)
+    dskwargs = {}
+    dskwargs = {**config.global_config , **config.dataset[ds]}
+    dskwargs['split'] = 'val'
+    cd = ReferDataset(**dskwargs)
     it = iter(cd)
 #%%
     data =  next(it)
-    print (data)
     sent_id,ans,box_feats,box_coordsorig,box_coords_6d,gtbox,qfeat,L,idx,correct = data
-      
+    print (data,"\nans:--->",cocoid2label[coco_classes[ans]])
+
   

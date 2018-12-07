@@ -5,10 +5,8 @@ Created on Fri Aug 10 13:04:34 2018
 
 @author: manoj
 """
-
-import torch
 import torch.nn as nn
-from .language import QuestionParser
+
 
 class RN(nn.Module):
     def __init__(self,Ncls,**kwargs):
@@ -21,13 +19,10 @@ class RN(nn.Module):
         
         common_layers =   [nn.Linear(insize, LINsize),
                            nn.ReLU(inplace=True),
-                           nn.Dropout(0.5),
                            nn.Linear(LINsize,LINsize)]
     
         self.fcommon = nn.Sequential(*common_layers) 
         
-        #B x 100 x 1024         
-        self.bn1 = nn.BatchNorm1d(num_features=100)
         
         fscore_layers =  [ nn.ReLU(inplace=True),
                            nn.Linear(LINsize,1)]
@@ -42,14 +37,10 @@ class RN(nn.Module):
 
     def forward(self,box_feats,q_feats,box_coords,index):
 
-        b,d,k = box_feats.size()      
-        b_full = box_feats      
-        common = self.fcommon(b_full)
-        common_batch = self.bn1(common)
-        scores = self.fscore(common_batch)
+        b,d,k = box_feats.size()          
+        common = self.fcommon(box_feats)
+        scores = self.fscore(common)
         # dont know why clone is needed here
         #backward was shgowing some error
-        logits =  self.fcls(common_batch.clone()) 
+        logits =  self.fcls(common.clone()) 
         return  scores,logits
-
-

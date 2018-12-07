@@ -46,10 +46,10 @@ html = """<!DOCTYPE html>
 
 
 htmls = """<table class="table table-bordered">
-<thead><tr><th>Dataset</th><th>Model</th><th>Eval Details</th><th>Performance</th></tr></thead>
+<thead><tr><th>Dataset</th><th>Model</th><th>Eval Details</th><th>Best epoch</th><th>Performance</th></tr></thead>
 <tbody>"""
 
-row = """<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>"""
+row = """<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>"""
 
 htmle = """
 </tbody>
@@ -68,11 +68,13 @@ def hello_world():
         model = folder.split("_")[1]
         try:
             js = parsejson( os.path.join(folder,'infos.json'))
-            acc = max(js['test acc'])
+            testacc = js['test acc']
+            epoch = np.argmax(testacc)
+            acc = testacc[epoch]
             description = '{:.2f}%'.format(acc)
         except:
             description = 'Not found'
-        rows += row.format(ds,model,name,description)
+        rows += row.format(ds,model,name,epoch,description)
     table = htmls + rows + htmle
     htmlstr = html.format(table)
     return htmlstr

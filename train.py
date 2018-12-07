@@ -148,7 +148,7 @@ def main(**kwargs):
 def getGTboxes(data,**kwargs):
     gt = {}
     #print (data[10],len(data))
-    if kwargs.get('dataset') == 'vqd':   
+    if 'vqd' in kwargs.get('dataset'):
         for entry in data:
             qid = entry['question_id']
             gtbox = entry['gtbox']
@@ -181,7 +181,7 @@ def testonly(**kwargs):
  
           
     gt = {}
-    gt['test'] = getGTboxes(testloader.dataset.data)    
+    gt['test'] = getGTboxes(testloader.dataset.data,**kwargs)    
     datatest = get_avg_precision_at_iou(gt['test'], test['pred'], iou_thr= 0.5)
     print(' Test avg precision: {:.4f}'.format(datatest['avg_prec']))
 
@@ -207,8 +207,8 @@ def run(**kwargs):
     Modelsavefreq = 1
            
     gt = {}
-    gt['test'] = getGTboxes(testloader.dataset.data)
-    gt['train'] = getGTboxes(trainloader.dataset.data)
+    gt['test'] = getGTboxes(testloader.dataset.data,**kwargs)
+    gt['train'] = getGTboxes(trainloader.dataset.data,**kwargs)
 
     for epoch in range(start_epoch,epochs):
 

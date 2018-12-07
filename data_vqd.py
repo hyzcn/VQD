@@ -37,11 +37,9 @@ class ReferDataset(Dataset):
             #only use the questinos having 1 bbox as answer
             datanew = []
             for ent in self.data:
-                #some image ids are not in the dataset
-                if ent['image_id'] in self.coco_id_to_index:
-                    gtbox = ent['gtbox']
-                    if len(gtbox[0]) != 0  and len(gtbox) == 1:
-                        datanew.append(ent)
+                gtbox = ent['gtbox']
+                if len(gtbox[0]) != 0  and len(gtbox) == 1:
+                    datanew.append(ent)
             self.data = datanew
 
 

@@ -8,7 +8,7 @@ from utils import load_checkpoint
 from utils import get_current_time
 from utils import Logger
 from opt import parse_args
-from data_frcnn import ReferDataset
+from data_vqd import ReferDataset
 from train import run
 
 if __name__ == '__main__':

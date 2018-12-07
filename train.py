@@ -145,13 +145,21 @@ def main(**kwargs):
         return ent
 
 
-def getGTboxes(data):
+def getGTboxes(data,**kwargs):
     gt = {}
-    for entry in data:
-        qid = entry['sentence']['sent_id']
-        xywh = np.array([entry['gtbox']])
-        gtbox = utils.xywh_to_xyxy(xywh)     
-        gt[qid] = gtbox.tolist()
+#    print (data[0])
+    if kwargs.get('dataset') == 'vqd':       
+        for entry in data:
+            qid = entry['sentence']['sent_id']
+            xywh = np.array([entry['gtbox']])
+            gtbox = utils.xywh_to_xyxy(xywh)     
+            gt[qid] = gtbox.tolist()
+    else:
+        for entry in data:
+            qid = entry['question_id']
+            xywh = np.array(entry['gtbox'])
+            gtbox = utils.xywh_to_xyxy(xywh)     
+            gt[qid] = gtbox.tolist()
     return gt
 
 

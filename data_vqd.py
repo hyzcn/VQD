@@ -24,11 +24,25 @@ class ReferDataset(Dataset):
         split = kwargs.get('split')
 
         
-        data_json = osp.join('cache/prepro', dataset +"_"+ splitBy , split +'.json')
+        data_json = osp.join('cache/prepro', "vqd" +"_"+ splitBy , split +'.json')
         
         with open(data_json,'r') as f:
             self.data = json.load(f)
             
+
+        #only use 1 or more gt bos        
+        if dataset == 'vqd1':
+            print ('VQDv1 1box loaded .......')
+        
+            #only use the questinos having 1 bbox as answer
+            datanew = []
+            for ent in self.data:
+                #some image ids are not in the dataset
+                if ent['image_id'] in self.coco_id_to_index:
+                    gtbox = ent['gtbox']
+                    if len(gtbox[0]) != 0  and len(gtbox) == 1:
+                        datanew.append(ent)
+            self.data = datanew
 
 
         dictfile = kwargs.get('dictionaryfile')
@@ -42,17 +56,16 @@ class ReferDataset(Dataset):
         print ("Dataset [{}] loaded....".format(dataset,split))
         print ("Split [{}] has {} ref exps.".format(split,len(self.data)))
         
-        
-        
-        #only use the questinos having 1 bbox as answer
+
+        #some qid doesnot exist
         datanew = []
         for ent in self.data:
             #some image ids are not in the dataset
             if ent['image_id'] in self.coco_id_to_index:
-                gtbox = ent['gtbox']
-                if len(gtbox[0]) != 0  and len(gtbox) == 1:
-                    datanew.append(ent)
+                datanew.append(ent)
         self.data = datanew
+
+
         
 
     def _process_boxes(self,bboxes,image_w,image_h):
@@ -178,12 +191,21 @@ if __name__ == "__main__":
     config.global_config['glove'] = config.global_config['glove'].format(ds)      
     dataloader_kwargs = {}
     dataloader_kwargs = {**config.global_config , **config.dataset[ds] }
-    dataloader_kwargs['split'] = 'train'
+    dataloader_kwargs['split'] = 'val'
     cd = ReferDataset(**dataloader_kwargs)
     it = iter(cd)
 #%%
     data =  next(it)
-    print (data)
     sent_id,ans,box_feats,box_coordsorig,box_coords_6d,gtbox,qfeat,L,idx,correct = data
+    print (box_coordsorig[:L.sum()])
+    #print (data)
+
+#%%
+    for data in it:
+        sent_id,ans,box_feats,box_coordsorig,box_coords_6d,gtbox,qfeat,L,idx,correct = data
+        for bb in box_coordsorig:
+            if int(round(bb[0])) ==  328 or int(round(bb[2])) == 328:
+                print (sent_id,box_coordsorig[:L.sum()])
+                break
       
   

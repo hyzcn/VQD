@@ -43,6 +43,15 @@ dataset[name]['dataset'] = name
 dataset[name]['splitBy'] = ''
 dataset[name]['splits'] = ['val']
 
+
+name= 'vqd1'
+dataset[name] = {}
+dataset[name]['dataset'] = name
+dataset[name]['splitBy'] = ''
+dataset[name]['splits'] = ['val']
+
+
+
 #model names
 from models import Point_GTU , Point_noGTU , Point_RN ,\
                     Point_noGTU_cb,Point_batchnormcb,Point_tanh,\

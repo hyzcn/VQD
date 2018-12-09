@@ -8,14 +8,26 @@ def find_noun_simple(ques):
     :return: A noun
     """
     if ques.startswith('Show the'):
-        words = ques.split(' ')
-        w = words[2]
+        ques = ques.replace('Show the ', '')
+        if ' in the image.' in ques:
+            ques = ques.replace(' in the image.', '')
+        elif ' in the picture.' in ques:
+            ques = ques.replace(' in the picture.', '')
+        w = ques
     elif ques.startswith('Show me the'):
-        words = ques.split(' ')
-        w = words[3]
+        ques = ques.replace('Show me the ', '')
+        if ' in the image.' in ques:
+            ques = ques.replace(' in the image.', '')
+        elif ' in the picture.' in ques:
+            ques = ques.replace(' in the picture.', '')
+        w = ques
     elif ques.startswith('Where is the'):
-        words = ques.split(' ')
-        w = words[3]
+        ques = ques.replace('Where is the ', '')
+        if ' in the image.' in ques:
+            ques = ques.replace(' in the image.', '')
+        elif ' in the picture.' in ques:
+            ques = ques.replace(' in the picture.', '')
+        w = ques
     else:
         print("problem with simple question")
         return None
@@ -31,14 +43,23 @@ def find_noun_color(ques):
     :return: A noun
     """
     if ques.startswith('Show me the'):
-        words = ques.split(' ')
-        if len(words) > 6:
-            w = words[3]
-        else:
-            w = words[4]
-    elif ques.startswith('Which'):
-        words = ques.split(' ')
-        w = words[1]
+        ques = ques.replace('Show me the ', '')
+        if 'which is ' in ques or 'that is ' in ques:
+            ques = ques.replace('which is ', '')
+            ques = ques.replace('that is ', '')
+        if len(ques.split(' ')) <= 3:
+            words = ques.split(' ', 1)
+            w = words[1]
+        if ' in color.' in ques:
+            ques = ques.replace(' in color.', '')
+            words = ques.rsplit(' ', 1)
+            w = words[0]
+    elif ques.startswith('Which '):
+        ques = ques.replace('Which ', '')
+        ques = ques.replace(' is', '')
+        ques = ques.replace(' in color?', '')
+        words = ques.rsplit(' ', 1)
+        w = words[0]
     else:
         print("problem with color question")
         return None
@@ -53,37 +74,26 @@ def find_noun_positional(ques):
     :param ques: Question(string of words)
     :return: A noun
     """
-    relationships = {'behind', 'next to', 'near', 'in front of', 'on top of',
-                     'under', 'above', 'on side of', 'beside', 'inside',
-                     'below', 'standing next to', 'to right of', 'to left of',
-                     'in back of', 'behind a'}
-    predicate = None
-    ques = ques.lower()
+    relationships = {' behind ', ' next to ', ' near ', ' in front of ',
+                     ' on top of ', ' under ',
+                     ' above ', ' on side of ', ' beside ', ' inside ',
+                     ' below ', ' standing next to ',
+                     ' to right of ', ' to left of ', ' in back of ',
+                     ' behind a '}
+    w = ''
+    if ques.startswith('Show the'):
+        ques = ques.replace('Show the ', '')
+        ques = ques.replace(' in the image.', '')
+        ques = ques.replace(' in the picture.', '')
+    elif ques.startswith('Which '):
+        ques = ques.replace('Which ', '')
+        ques = ques.replace('is ', '')
     for rel in relationships:
         if rel in ques:
-            predicate = rel
-    if predicate is None:
-        print('problem in predicate')
-        print(ques)
-        sys.exit(1)
+            words = ques.split(rel)
+            w = words[0]
+            break
 
-    my_list = ques.split(predicate)
-
-    if ques.startswith('show the'):
-        words = my_list[0].split(' ')
-        subject = words[2]
-        words = my_list[1].split(' ')
-        obj = words[0]
-        w = subject
-    elif ques.startswith('which'):
-        words = my_list[0].split(' ')
-        subject = words[1]
-        words = my_list[1].split(' ')
-        obj = words[0]
-        w = subject
-    else:
-        print("problem with positional question")
-        return None
     w = w.replace('.', '')
     w = w.replace('?', '')
     return w

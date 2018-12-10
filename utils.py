@@ -260,6 +260,16 @@ def xyxy_to_xywh(boxes):
   """Convert [x1 y1 x2 y2] box format to [x y w h] format."""
   return np.hstack((boxes[:, 0:2], boxes[:, 2:4] - boxes[:, 0:2] + 1))       
 
-
+def check_malformed(bbox,format ='xyxy'):
+    """    Raises AssertionError: if the box is malformed
+    """
+    if format =='xyxy':
+        xmin, ymin, xmax, ymax = bbox
+    elif format =='xywh':
+        xmin, ymin, w, h = bbox
+        xmax = xmin + w -1 
+        ymax = ymin + h -1      
+    if (xmin > xmax) or (ymin > ymax):
+        print ("Prediction box is malformed? pred box: {}".format(bbox))
 
 

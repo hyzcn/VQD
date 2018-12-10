@@ -128,6 +128,8 @@ def get_precision_recall(pred_bb, gt_bb, IOUThreshold=0.5):
     return precision, recall
 
 
+
+#%%
 def plot_precision_recall_curve(precision, recall):
     """
     Plot the precision recall curve

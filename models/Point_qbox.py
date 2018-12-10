@@ -71,6 +71,23 @@ class RN(nn.Module):
         
         
 
+#    def forward(self,box_feats,q_feats,box_coords,index):
+#
+#        q_rnn  = self.QRNN(q_feats)
+#        b,d,k = box_feats.size()
+#        qst  =  q_rnn.unsqueeze(1)
+#        qst = qst.repeat(1, d, 1) 
+#
+#        b_full = torch.cat([box_feats,qst],-1)            
+#        common = self.fcommon(b_full)
+#
+#        scores = self.fscore(common)
+#        # dont know why clone is needed here
+#        #backward was shgowing some error
+#        logits =  self.fcls(common.clone()) 
+#        return  scores,logits
+
+
     def forward(self,box_feats,q_feats,box_coords,index):
 
         q_rnn  = self.QRNN(q_feats)
@@ -82,6 +99,7 @@ class RN(nn.Module):
         common = self.fcommon(b_full)
 
         scores = self.fscore(common)
+        scores = torch.sigmoid(scores)
         # dont know why clone is needed here
         #backward was shgowing some error
         logits =  self.fcls(common.clone()) 

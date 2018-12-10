@@ -55,11 +55,14 @@ class ReferDataset(Dataset):
         print ("Split [{}] has {} ref exps.".format(split,len(self.data)))
         
 
+        cocoids = set(self.coco_id_to_index)
+        if kwargs.get('istrain'):
+            cocoids.remove(81768)
         #some qid doesnot exist
         datanew = []
         for ent in self.data:
             #some image ids are not in the dataset
-            if ent['image_id'] in self.coco_id_to_index:
+            if ent['image_id'] in cocoids:
                 datanew.append(ent)
         self.data = datanew
 
@@ -195,15 +198,4 @@ if __name__ == "__main__":
 #%%
     data =  next(it)
     sent_id,ans,box_feats,box_coordsorig,box_coords_6d,gtbox,qfeat,L,idx,correct = data
-    print (box_coordsorig[:L.sum()])
-    #print (data)
-
-#%%
-    for data in it:
-        sent_id,ans,box_feats,box_coordsorig,box_coords_6d,gtbox,qfeat,L,idx,correct = data
-        for bb in box_coordsorig:
-            if int(round(bb[0])) ==  328 or int(round(bb[2])) == 328:
-                print (sent_id,box_coordsorig[:L.sum()])
-                break
-      
-  
+    print (data)

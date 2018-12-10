@@ -6,7 +6,7 @@ Created on Fri Aug 10 13:04:34 2018
 @author: manoj
 """
 import torch.nn as nn
-
+import torch
 
 class RN(nn.Module):
     def __init__(self,Ncls,**kwargs):
@@ -40,6 +40,7 @@ class RN(nn.Module):
         b,d,k = box_feats.size()          
         common = self.fcommon(box_feats)
         scores = self.fscore(common)
+        scores = torch.sigmoid(scores)
         # dont know why clone is needed here
         #backward was shgowing some error
         logits =  self.fcls(common.clone()) 

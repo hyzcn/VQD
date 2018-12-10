@@ -46,11 +46,11 @@ def main(**kwargs):
         net.eval()
 
     clslossfn = nn.CrossEntropyLoss(reduction='none')
-    #mmloss = nn.MultiMarginLoss()
-    mmloss = nn.CrossEntropyLoss()
+    mmloss = nn.MultiMarginLoss(margin=0.5)
+    #mmloss = nn.CrossEntropyLoss()
     
     with torch.set_grad_enabled(istrain):
-        for imain, data in enumerate(loader):
+        for iteridx, data in enumerate(loader):
             sent_id,ans,box_feats,box_coordsorig,box_coords_6d,gtbox,qfeat,L,idx,correct = data            
             #idxs.extend(sent_id.tolist())        
             #true.extend(gtbox.tolist())
@@ -104,17 +104,21 @@ def main(**kwargs):
             _,clspred = torch.max(scores,-1)           
     
             scores_lst = scores.tolist()
-            clsp = clspred.tolist()
-            for i,qid in enumerate(sent_id.tolist()):
+            clsp = clspred.long().tolist()
+            Lsum = L.sum(dim=-1).long().tolist()
+            for isentid,qid in enumerate(sent_id.tolist()):
                 dent = {}
-                Nbox = clsp[i]
-                allboxes = box_coordsorig[i].tolist()
-                allscores = scores_lst[i]              
-                Nbox = clspred[i].item()
-                dent['boxes'] =  [allboxes[Nbox]]
-                dent['scores'] = [0.99]            
-                #ent['boxes'] =  allboxes[:Nbox]
-                #ent['scores'] = [:Nbox]
+                              
+                allboxes = box_coordsorig[isentid].tolist()
+                allscores = scores_lst[isentid]
+                if kwargs.get('dataset') == 'vqd':
+                    Nbox = Lsum[isentid]                                            
+                    dent['boxes'] =  allboxes[:Nbox]
+                    dent['scores'] = allscores[:Nbox]
+                else:
+                    Nbox = clsp[isentid]
+                    dent['boxes'] =  [allboxes[Nbox]]
+                    dent['scores'] = [0.99]                      
                 pred[qid] = dent
             
        
@@ -127,13 +131,13 @@ def main(**kwargs):
                     nn.utils.clip_grad_norm_(net.parameters(), kwargs.get('clip_norm'))
                 optimizer.step()
     
-            if imain == 0 and epoch == 0 and istrain:
+            if iteridx == 0 and epoch == 0 and istrain:
                     print ("Starting loss: {:.4f}".format(loss.item()))
                 
     
-            if imain % Nprint == Nprint-1:
+            if iteridx % Nprint == Nprint-1:
                 infostr = "Epoch [{}]:Iter [{}]/[{}] Loss: {:.4f} Time: {:2.2f} s"
-                printinfo = infostr.format(epoch , i, len(loader),
+                printinfo = infostr.format(epoch , iteridx, len(loader),
                                            loss_meter.avg,time.time() - start_time)
     
                 print (printinfo)
@@ -209,6 +213,9 @@ def run(**kwargs):
     gt = {}
     gt['test'] = getGTboxes(testloader.dataset.data,**kwargs)
     gt['train'] = getGTboxes(trainloader.dataset.data,**kwargs)
+    #save gt for test
+    path = os.path.join(savefolder, 'test_gt.json')
+    json.dump(gt['test'],open(path,'w'))
 
     for epoch in range(start_epoch,epochs):
 
@@ -221,9 +228,18 @@ def run(**kwargs):
         logger.write('Epoch {} Time {:2.2f} s ------'.format(epoch,total_time))
         logger.write('\tTrain Loss: {:.4f}'.format(train['loss']))
         logger.write('\tTest Loss: {:.4f}'.format(test['loss']))
-        
-        datatrain = get_avg_precision_at_iou(gt['train'], train['pred'], iou_thr= 0.5)
-        logger.write('Train mAP: {:.4f}'.format(datatrain['avg_prec']))
+
+
+        if kwargs.get('savejson'):
+            path = os.path.join(savefolder, 'test{}.json'.format(epoch))
+            json.dump(test['pred'],open(path,'w'))
+            
+            path = os.path.join(savefolder, 'train{}.json'.format(epoch))
+            json.dump(train['pred'],open(path,'w'))
+
+       
+        #datatrain = get_avg_precision_at_iou(gt['train'], train['pred'], iou_thr= 0.5)
+        #logger.write('Train mAP: {:.4f}'.format(datatrain['avg_prec']))
         
         datatest = get_avg_precision_at_iou(gt['test'], test['pred'], iou_thr= 0.5)
         logger.write('Test mAP: {:.4f}'.format(datatest['avg_prec']))
@@ -231,14 +247,9 @@ def run(**kwargs):
         #log extra information in a logger dict
         logger.append('train loss',train['loss'])
         logger.append('test loss',test['loss'])
-        logger.append('train acc',100*datatrain['avg_prec'])
+        #logger.append('train acc',100*datatrain['avg_prec'])
         logger.append('test acc',100*datatest['avg_prec'])        
-        
-
-        if kwargs.get('savejson'):
-            path = os.path.join(savefolder, 'test{}.json'.format(epoch))
-            json.dump(test['pred'],open(path,'w'))
-            
+                    
         is_best = False
         if epoch % Modelsavefreq == 0:
             if savemodel or is_best:

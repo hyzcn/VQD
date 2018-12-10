@@ -125,6 +125,7 @@ class RN(nn.Module):
 
         
         scores = self.fscore(batch_context)
+        scores = torch.sigmoid(scores)
         # dont know why clone is needed here
         #backward was shgowing some error
         logits =  self.fcls(batch_context.clone()) 
